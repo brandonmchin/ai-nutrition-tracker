@@ -44,19 +44,41 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
   };
 
   const calculateTotals = () => {
-    if (!foodLog?.entries) return { calories: 0, protein: 0, carbs: 0, fat: 0 };
+    if (!foodLog?.entries) {
+      return { 
+        calories: 0, 
+        protein: 0, 
+        carbs: 0, 
+        fat: 0,
+        cholesterol: 0,
+        sodium: 0,
+        sugar: 0
+      };
+    }
     return foodLog.entries.reduce(
       (acc, entry) => ({
         calories: acc.calories + entry.calories,
         protein: acc.protein + entry.protein,
         carbs: acc.carbs + entry.carbs,
         fat: acc.fat + entry.fat,
+        cholesterol: acc.cholesterol + (entry.cholesterol || 0),
+        sodium: acc.sodium + (entry.sodium || 0),
+        sugar: acc.sugar + (entry.sugar || 0),
       }),
-      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+      { 
+        calories: 0, 
+        protein: 0, 
+        carbs: 0, 
+        fat: 0,
+        cholesterol: 0,
+        sodium: 0,
+        sugar: 0
+      }
     );
   };
 
   const totals = calculateTotals();
+  const hasOptionalMicros = goals && (goals.cholesterolGoal || goals.sodiumGoal || goals.sugarGoal);
 
   if (loading) return <div className="text-center py-4 text-gray-700 dark:text-gray-300">Loading...</div>;
 
@@ -67,8 +89,10 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
       {/* Progress Summary */}
       {goals && (
         <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded">
-          <h4 className="font-semibold mb-2 text-gray-800 dark:text-white">Daily Progress</h4>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+          <h4 className="font-semibold mb-3 text-gray-800 dark:text-white">Daily Progress</h4>
+          
+          {/* Main Macros */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
             <div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Calories</div>
               <div className="font-bold text-gray-900 dark:text-white">
@@ -104,6 +128,53 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
               <div className="text-xs text-gray-500 dark:text-gray-400">
                 {Math.round((totals.fat / goals.fatGoal) * 100)}%
               </div>
+            </div>
+          </div>
+
+          {/* Optional Micros */}
+          <div className="border-t border-gray-200 dark:border-gray-600 my-3"></div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Cholesterol</div>
+              <div className="font-bold text-gray-900 dark:text-white">
+                {goals?.cholesterolGoal 
+                  ? `${totals.cholesterol.toFixed(1)}mg / ${goals.cholesterolGoal}mg`
+                  : `${totals.cholesterol.toFixed(1)}mg`
+                }
+              </div>
+              {goals?.cholesterolGoal && (
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {Math.round((totals.cholesterol / goals.cholesterolGoal) * 100)}%
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Sodium</div>
+              <div className="font-bold text-gray-900 dark:text-white">
+                {goals?.sodiumGoal 
+                  ? `${totals.sodium.toFixed(1)}mg / ${goals.sodiumGoal}mg`
+                  : `${totals.sodium.toFixed(1)}mg`
+                }
+              </div>
+              {goals?.sodiumGoal && (
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {Math.round((totals.sodium / goals.sodiumGoal) * 100)}%
+                </div>
+              )}
+            </div>
+            <div>
+              <div className="text-sm text-gray-600 dark:text-gray-400">Sugar</div>
+              <div className="font-bold text-gray-900 dark:text-white">
+                {goals?.sugarGoal 
+                  ? `${totals.sugar.toFixed(1)}g / ${goals.sugarGoal}g`
+                  : `${totals.sugar.toFixed(1)}g`
+                }
+              </div>
+              {goals?.sugarGoal && (
+                <div className="text-xs text-gray-500 dark:text-gray-400">
+                  {Math.round((totals.sugar / goals.sugarGoal) * 100)}%
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -143,6 +214,27 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
                       <span className="text-gray-600 dark:text-gray-400">F:</span> {entry.fat}g
                     </div>
                   </div>
+                  
+                  {/* Show optional micros if present */}
+                  {(entry.cholesterol || entry.sodium || entry.sugar) && (
+                    <div className="mt-2 grid grid-cols-3 gap-2 text-sm border-t border-gray-200 dark:border-gray-700 pt-2">
+                      {entry.cholesterol && (
+                        <div className="text-gray-700 dark:text-gray-300">
+                          <span className="text-gray-600 dark:text-gray-400">Chol:</span> {entry.cholesterol}mg
+                        </div>
+                      )}
+                      {entry.sodium && (
+                        <div className="text-gray-700 dark:text-gray-300">
+                          <span className="text-gray-600 dark:text-gray-400">Na:</span> {entry.sodium}mg
+                        </div>
+                      )}
+                      {entry.sugar && (
+                        <div className="text-gray-700 dark:text-gray-300">
+                          <span className="text-gray-600 dark:text-gray-400">Sugar:</span> {entry.sugar}g
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={() => handleDelete(entry.id)}

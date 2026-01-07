@@ -31,11 +31,14 @@ model NutritionGoal {
   fatGoal     Int
   
   // Micros (in mg or mcg as appropriate)
-  vitaminAGoal Float?
-  vitaminCGoal Float?
-  vitaminDGoal Float?
-  calciumGoal  Float?
-  ironGoal     Float?
+  cholesterolGoal Float?
+  sodiumGoal      Float?
+  sugarGoal       Float?
+  vitaminAGoal    Float?
+  vitaminCGoal    Float?
+  vitaminDGoal    Float?
+  calciumGoal     Float?
+  ironGoal        Float?
   
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -72,11 +75,14 @@ model FoodEntry {
   fat       Float
   
   // Optional micros
-  vitaminA  Float?
-  vitaminC  Float?
-  vitaminD  Float?
-  calcium   Float?
-  iron      Float?
+  cholesterol   Float?
+  sodium        Float?
+  sugar         Float?
+  vitaminA      Float?
+  vitaminC      Float?
+  vitaminD      Float?
+  calcium       Float?
+  iron          Float?
   
   mealType  String?  // e.g., "breakfast", "lunch", "dinner", "snack"
   notes     String?

@@ -12,6 +12,9 @@ export interface User {
     proteinGoal: number;
     carbsGoal: number;
     fatGoal: number;
+    cholesterolGoal?: number;
+    sodiumGoal?: number;
+    sugarGoal?: number;
     vitaminAGoal?: number;
     vitaminCGoal?: number;
     vitaminDGoal?: number;
@@ -31,6 +34,9 @@ export interface User {
     protein: number;
     carbs: number;
     fat: number;
+    cholesterol?: number;
+    sodium?: number;
+    sugar?: number;
     vitaminA?: number;
     vitaminC?: number;
     vitaminD?: number;

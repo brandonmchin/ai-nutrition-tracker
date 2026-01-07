@@ -44,6 +44,28 @@ function App() {
     }
   };
 
+  const handleDeleteUser = async (userId: string, userName: string) => {
+    if (!window.confirm(`Are you sure you want to delete user "${userName}"? This will delete all their data including goals and food logs.`)) {
+      return;
+    }
+    
+    try {
+      await fetch(`http://localhost:3001/api/users/${userId}`, {
+        method: 'DELETE',
+      });
+      
+      // If we deleted the selected user, clear the selection
+      if (selectedUserId === userId) {
+        setSelectedUserId('');
+      }
+      
+      loadUsers();
+    } catch (error) {
+      console.error('Failed to delete user:', error);
+      alert('Failed to delete user');
+    }
+  };
+
   const handleEntryAdded = () => {
     setRefreshTrigger(prev => prev + 1);
   };
@@ -72,21 +94,35 @@ function App() {
           </div>
           
           <div className="flex flex-wrap gap-4 items-center">
-            <div>
-              <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
-                User
-              </label>
-              <select
-                value={selectedUserId}
-                onChange={(e) => setSelectedUserId(e.target.value)}
-                className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                {users.map((user) => (
-                  <option key={user.id} value={user.id}>
-                    {user.name}
-                  </option>
-                ))}
-              </select>
+            <div className="flex items-center gap-2">
+              <div>
+                <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+                  User
+                </label>
+                <select
+                  value={selectedUserId}
+                  onChange={(e) => setSelectedUserId(e.target.value)}
+                  className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                >
+                  {users.map((user) => (
+                    <option key={user.id} value={user.id}>
+                      {user.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              {selectedUserId && users.find(u => u.id === selectedUserId) && (
+                <button
+                  onClick={() => {
+                    const user = users.find(u => u.id === selectedUserId);
+                    if (user) handleDeleteUser(user.id, user.name);
+                  }}
+                  className="bg-red-500 dark:bg-red-600 text-white px-4 py-2 rounded hover:bg-red-600 dark:hover:bg-red-700 mt-6"
+                  title="Delete user"
+                >
+                  Delete User
+                </button>
+              )}
             </div>
             <button
               onClick={handleCreateUser}

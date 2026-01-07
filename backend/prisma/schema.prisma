@@ -1,0 +1,86 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(uuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  goals     NutritionGoal?
+  foodLogs  FoodLog[]
+}
+
+model NutritionGoal {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  // Calorie goal
+  calorieGoal Int
+  
+  // Macros (in grams)
+  proteinGoal Int
+  carbsGoal   Int
+  fatGoal     Int
+  
+  // Micros (in mg or mcg as appropriate)
+  vitaminAGoal Float?
+  vitaminCGoal Float?
+  vitaminDGoal Float?
+  calciumGoal  Float?
+  ironGoal     Float?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model FoodLog {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  date      DateTime @default(now())
+  
+  entries   FoodEntry[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId, date])
+}
+
+model FoodEntry {
+  id        String   @id @default(uuid())
+  foodLogId String
+  foodLog   FoodLog  @relation(fields: [foodLogId], references: [id], onDelete: Cascade)
+  
+  foodName  String
+  quantity  Float
+  unit      String   // e.g., "grams", "oz", "cup"
+  
+  // Nutritional info
+  calories  Int
+  protein   Float
+  carbs     Float
+  fat       Float
+  
+  // Optional micros
+  vitaminA  Float?
+  vitaminC  Float?
+  vitaminD  Float?
+  calcium   Float?
+  iron      Float?
+  
+  mealType  String?  // e.g., "breakfast", "lunch", "dinner", "snack"
+  notes     String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}

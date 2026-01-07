@@ -6,14 +6,30 @@ const api = axios.create({
   baseURL: API_BASE_URL,
 });
 
-// User API
-export const createUser = async (name: string) => {
-  const response = await api.post('/users', { name });
+// Auth API
+export const register = async (username: string, password: string) => {
+  const response = await api.post('/auth/register', { username, password });
   return response.data;
 };
 
-export const getUsers = async () => {
-  const response = await api.get('/users');
+export const login = async (username: string, password: string) => {
+  const response = await api.post('/auth/login', { username, password });
+  return response.data;
+};
+
+// User API
+export const createUser = async (name: string, accountId: string) => {
+  const response = await api.post('/users', { name, accountId });
+  return response.data;
+};
+
+export const getUsersByAccount = async (accountId: string) => {
+  const response = await api.get(`/users/account/${accountId}`);
+  return response.data;
+};
+
+export const deleteUser = async (userId: string) => {
+  const response = await api.delete(`/users/${userId}`);
   return response.data;
 };
 

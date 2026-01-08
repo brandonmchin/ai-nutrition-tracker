@@ -1,4 +1,4 @@
-# Nutrition Tracker
+# AI Nutrition Tracker
 
 A full-stack nutrition tracking application with user authentication.
 

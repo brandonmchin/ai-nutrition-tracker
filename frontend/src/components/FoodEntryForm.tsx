@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { addFoodEntry } from '../services/api';
+import React, { useState, useEffect } from 'react';
+import { addFoodEntry, analyzeFoodWithAI, getGoals } from '../services/api';
 
 interface FoodEntryFormProps {
   userId: string;
@@ -23,6 +23,64 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
   });
   const [adding, setAdding] = useState(false);
   const [showOptional, setShowOptional] = useState(false);
+  const [useAI, setUseAI] = useState(false);
+  const [aiDescription, setAiDescription] = useState('');
+  const [analyzing, setAnalyzing] = useState(false);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [confidence, setConfidence] = useState<string>('');
+
+  const handleAIAnalysis = async () => {
+    if (!aiDescription.trim()) {
+      alert('Please describe what you ate');
+      return;
+    }
+
+    setAnalyzing(true);
+    setSuggestions([]);
+    setConfidence('');
+
+    try {
+      // Get user's goals for context
+      const goals = await getGoals(userId);
+      
+      if (!goals) {
+        alert('Please set your nutrition goals first');
+        return;
+      }
+
+      // Analyze food with AI
+      const result = await analyzeFoodWithAI(aiDescription, goals);
+
+      // Populate form with AI results
+      setEntry({
+        foodName: result.foodName,
+        quantity: result.quantity.toString(),
+        unit: result.unit,
+        calories: result.calories.toString(),
+        protein: result.protein.toString(),
+        carbs: result.carbs.toString(),
+        fat: result.fat.toString(),
+        mealType: result.mealType,
+        cholesterol: result.cholesterol?.toString() || '',
+        sodium: result.sodium?.toString() || '',
+        sugar: result.sugar?.toString() || '',
+      });
+
+      setSuggestions(result.suggestions || []);
+      setConfidence(result.confidence);
+
+      // Show optional fields if any micros were detected
+      if (result.cholesterol || result.sodium || result.sugar) {
+        setShowOptional(true);
+      }
+
+    } catch (error: any) {
+      console.error('AI analysis failed:', error);
+      alert(error.response?.data?.message || 'Failed to analyze food. Please try again or enter manually.');
+    } finally {
+      setAnalyzing(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -47,6 +105,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
 
       await addFoodEntry(userId, entryData);
       
+      // Reset form
       setEntry({
         foodName: '',
         quantity: '',
@@ -60,6 +119,10 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
         sodium: '',
         sugar: '',
       });
+      setAiDescription('');
+      setSuggestions([]);
+      setConfidence('');
+      setUseAI(false);
       onEntryAdded();
     } catch (error) {
       console.error('Failed to add entry:', error);
@@ -71,7 +134,76 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-      <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Add Food Entry</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl font-bold text-gray-800 dark:text-white">Add Food Entry</h3>
+        <button
+          type="button"
+          onClick={() => {
+            setUseAI(!useAI);
+            setSuggestions([]);
+            setConfidence('');
+          }}
+          className={`px-4 py-2 rounded transition-colors ${
+            useAI
+              ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600'
+              : 'bg-purple-500 dark:bg-purple-600 text-white hover:bg-purple-600 dark:hover:bg-purple-700'
+          }`}
+        >
+          {useAI ? '✏️ Manual Entry' : '🤖 AI Assistant'}
+        </button>
+      </div>
+
+      {useAI && (
+        <div className="mb-6 p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+          <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+            Describe what you ate
+          </label>
+          <textarea
+            value={aiDescription}
+            onChange={(e) => setAiDescription(e.target.value)}
+            className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white min-h-[80px]"
+            placeholder="e.g., 2 scrambled eggs with cheese, 2 slices of whole wheat toast with butter, and a cup of coffee"
+          />
+          <button
+            type="button"
+            onClick={handleAIAnalysis}
+            disabled={analyzing}
+            className="mt-2 bg-purple-500 dark:bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-600 dark:hover:bg-purple-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 transition-colors"
+          >
+            {analyzing ? '🤔 Analyzing...' : '✨ Analyze with AI'}
+          </button>
+
+          {confidence && (
+            <div className="mt-2 text-sm">
+              <span className="text-gray-600 dark:text-gray-400">Confidence: </span>
+              <span className={`font-semibold ${
+                confidence === 'high' ? 'text-green-600 dark:text-green-400' :
+                confidence === 'medium' ? 'text-yellow-600 dark:text-yellow-400' :
+                'text-orange-600 dark:text-orange-400'
+              }`}>
+                {confidence.toUpperCase()}
+              </span>
+              {confidence !== 'high' && (
+                <span className="text-gray-600 dark:text-gray-400 ml-2">
+                  (Please review and adjust values as needed)
+                </span>
+              )}
+            </div>
+          )}
+
+          {suggestions.length > 0 && (
+            <div className="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+              <h4 className="font-semibold text-blue-900 dark:text-blue-200 mb-2">💡 Personalized Suggestions:</h4>
+              <ul className="list-disc list-inside space-y-1 text-sm text-blue-800 dark:text-blue-300">
+                {suggestions.map((suggestion, index) => (
+                  <li key={index}>{suggestion}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>

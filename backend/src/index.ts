@@ -5,6 +5,7 @@ import authRouter from './routes/auth';
 import goalsRouter from './routes/goals';
 import foodLogsRouter from './routes/foodLogs';
 import usersRouter from './routes/users';
+import aiRouter from './routes/ai';
 
 dotenv.config();
 
@@ -25,6 +26,7 @@ app.use('/api/auth', authRouter);
 app.use('/api/users', usersRouter);
 app.use('/api/goals', goalsRouter);
 app.use('/api/food-logs', foodLogsRouter);
+app.use('/api/ai', aiRouter);
 
 app.listen(PORT, () => {
   console.log(`Server running on http://localhost:${PORT}`);

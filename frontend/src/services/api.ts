@@ -60,4 +60,10 @@ export const deleteFoodEntry = async (entryId: string) => {
   return response.data;
 };
 
+// AI API
+export const analyzeFoodWithAI = async (foodDescription: string, goals: any) => {
+  const response = await api.post('/ai/analyze-food', { foodDescription, goals });
+  return response.data;
+};
+
 export default api;

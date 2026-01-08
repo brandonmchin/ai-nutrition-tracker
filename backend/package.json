@@ -16,7 +16,8 @@
     "bcrypt": "^6.0.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.3",
-    "express": "^5.2.1"
+    "express": "^5.2.1",
+    "openai": "^6.15.0"
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",

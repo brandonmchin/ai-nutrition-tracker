@@ -4,6 +4,10 @@ import prisma from '../prisma';
 export const getFoodLogsByDate = async (req: Request, res: Response) => {
   try {
     const { userId, date } = req.params;
+
+    if (!userId || !date) {
+      return res.status(400).json({ error: 'userId and date are required' });
+    }
     
     const startOfDay = new Date(date);
     startOfDay.setHours(0, 0, 0, 0);
@@ -33,6 +37,11 @@ export const getFoodLogsByDate = async (req: Request, res: Response) => {
 export const addFoodEntry = async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
+
+    if (!userId) {
+      return res.status(400).json({ error: 'userId is required' });
+    }
+
     const { date, ...entryData } = req.body;
     
     const logDate = date ? new Date(date) : new Date();
@@ -75,6 +84,10 @@ export const addFoodEntry = async (req: Request, res: Response) => {
 export const deleteFoodEntry = async (req: Request, res: Response) => {
   try {
     const { entryId } = req.params;
+
+    if (!entryId) {
+      return res.status(400).json({ error: 'entryId is required' });
+    }
     
     await prisma.foodEntry.delete({
       where: { id: entryId }

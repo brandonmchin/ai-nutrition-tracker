@@ -88,7 +88,7 @@ CRITICAL: Return ONLY the JSON object. No markdown, no code blocks, no additiona
       temperature: 0.3, // Lower temperature for more consistent outputs
     });
 
-    const content = response.choices[0].message.content;
+    const content = response.choices[0]?.message?.content;
     if (!content) {
       throw new Error('No response from OpenAI');
     }

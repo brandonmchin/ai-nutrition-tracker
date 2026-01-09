@@ -15,6 +15,7 @@ const PORT = parseInt(process.env.PORT || '3001', 10);
 // CORS configuration
 const allowedOrigins = [
   'http://localhost:3000',
+  'https://ai-nutrition-tracker-production.up.railway.app',
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 

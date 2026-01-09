@@ -21,6 +21,7 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps, Postman, or health checks)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) !== -1) {
@@ -33,6 +34,11 @@ app.use(cors({
 }));
 
 app.use(express.json());
+
+// Root health check (for deployment)
+app.get('/', (req, res) => {
+  res.json({ status: 'ok', message: 'Nutrition Tracker API is running' });
+});
 
 // Basic health check
 app.get('/api/health', (req, res) => {
@@ -47,5 +53,9 @@ app.use('/api/food-logs', foodLogsRouter);
 app.use('/api/ai', aiRouter);
 
 app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on http://localhost:${PORT}`);
+  console.log(`Server running on port ${PORT}`);
+  console.log(`Health check available at http://0.0.0.0:${PORT}/api/health`);
+}).on('error', (err: NodeJS.ErrnoException) => {
+  console.error('Failed to start server:', err);
+  process.exit(1);
 });

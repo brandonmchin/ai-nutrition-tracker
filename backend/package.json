@@ -4,8 +4,10 @@
   "main": "index.js",
   "scripts": {
     "dev": "ts-node-dev --respawn --transpile-only src/index.ts",
-    "build": "tsc",
-    "start": "node dist/index.js"
+    "build": "tsc && prisma generate",
+    "postinstall": "prisma generate",
+    "migrate:deploy": "prisma migrate deploy",
+    "start": "npm run migrate:deploy && node dist/index.js"
   },
   "keywords": [],
   "author": "",

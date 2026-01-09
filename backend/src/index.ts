@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
+import { execSync } from 'child_process';
 import authRouter from './routes/auth';
 import goalsRouter from './routes/goals';
 import foodLogsRouter from './routes/foodLogs';
@@ -8,6 +9,21 @@ import usersRouter from './routes/users';
 import aiRouter from './routes/ai';
 
 dotenv.config();
+
+// Run Prisma migrations on startup (production only)
+if ((process.env.NODE_ENV === 'production' || process.env.RAILWAY_ENVIRONMENT) && process.env.DATABASE_URL) {
+  try {
+    console.log('Running database migrations...');
+    execSync('npx prisma migrate deploy', { stdio: 'inherit' });
+    console.log('Migrations completed successfully');
+  } catch (error) {
+    console.error('Migration failed:', error);
+    // Don't exit - let the server start anyway for debugging
+    // In production, you might want to exit here: process.exit(1);
+  }
+} else if (!process.env.DATABASE_URL) {
+  console.warn('DATABASE_URL not set - skipping migrations');
+}
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);

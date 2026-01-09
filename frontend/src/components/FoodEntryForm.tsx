@@ -28,6 +28,45 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
   const [analyzing, setAnalyzing] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [confidence, setConfidence] = useState<string>('');
+  
+  // Store base values from AI for scaling
+  const [baseValues, setBaseValues] = useState<{
+    quantity: number;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    cholesterol?: number;
+    sodium?: number;
+    sugar?: number;
+  } | null>(null);
+
+  // Auto-scale nutrition values when quantity changes
+  useEffect(() => {
+    if (!baseValues || !entry.quantity) return;
+
+    const newQuantity = parseFloat(entry.quantity);
+    if (isNaN(newQuantity) || newQuantity <= 0) return;
+
+    const scaleFactor = newQuantity / baseValues.quantity;
+
+    setEntry(prev => ({
+      ...prev,
+      calories: Math.round(baseValues.calories * scaleFactor).toString(),
+      protein: (baseValues.protein * scaleFactor).toFixed(1),
+      carbs: (baseValues.carbs * scaleFactor).toFixed(1),
+      fat: (baseValues.fat * scaleFactor).toFixed(1),
+      cholesterol: baseValues.cholesterol 
+        ? (baseValues.cholesterol * scaleFactor).toFixed(1)
+        : '',
+      sodium: baseValues.sodium 
+        ? (baseValues.sodium * scaleFactor).toFixed(1)
+        : '',
+      sugar: baseValues.sugar 
+        ? (baseValues.sugar * scaleFactor).toFixed(1)
+        : '',
+    }));
+  }, [entry.quantity, baseValues]);
 
   const handleAIAnalysis = async () => {
     if (!aiDescription.trim()) {
@@ -50,6 +89,18 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
 
       // Analyze food with AI
       const result = await analyzeFoodWithAI(aiDescription, goals);
+
+      // Store base values for scaling
+      setBaseValues({
+        quantity: result.quantity,
+        calories: result.calories,
+        protein: result.protein,
+        carbs: result.carbs,
+        fat: result.fat,
+        cholesterol: result.cholesterol || undefined,
+        sodium: result.sodium || undefined,
+        sugar: result.sugar || undefined,
+      });
 
       // Populate form with AI results
       setEntry({
@@ -122,6 +173,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
       setAiDescription('');
       setSuggestions([]);
       setConfidence('');
+      setBaseValues(null);
       setUseAI(false);
       onEntryAdded();
     } catch (error) {
@@ -130,6 +182,18 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
     } finally {
       setAdding(false);
     }
+  };
+
+  // Handle manual quantity change
+  const handleQuantityChange = (value: string) => {
+    setEntry({ ...entry, quantity: value });
+    // The useEffect above will handle the scaling
+  };
+
+  // Clear base values when switching modes or manually editing nutrition fields
+  const handleManualNutritionEdit = (field: string, value: string) => {
+    setEntry({ ...entry, [field]: value });
+    setBaseValues(null); // Disable auto-scaling when user manually edits
   };
 
   return (
@@ -142,6 +206,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
             setUseAI(!useAI);
             setSuggestions([]);
             setConfidence('');
+            setBaseValues(null);
           }}
           className={`px-4 py-2 rounded transition-colors ${
             useAI
@@ -149,7 +214,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
               : 'bg-purple-500 dark:bg-purple-600 text-white hover:bg-purple-600 dark:hover:bg-purple-700'
           }`}
         >
-          {useAI ? '✏️ Manual Entry' : '🤖 AI Assistant'}
+          {useAI ? '✏️ Switch to Manual' : '🤖 Use AI Assistant'}
         </button>
       </div>
 
@@ -204,6 +269,21 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
         </div>
       )}
 
+      {baseValues && (
+        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
+          <p className="text-sm text-green-800 dark:text-green-300">
+            ✨ <strong>Auto-scaling enabled:</strong> Adjust the quantity and all nutrition values will update automatically.
+            {' '}<button 
+              type="button"
+              onClick={() => setBaseValues(null)}
+              className="text-green-600 dark:text-green-400 underline hover:no-underline"
+            >
+              Disable
+            </button>
+          </p>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -230,12 +310,14 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
             </select>
           </div>
           <div>
-            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">Quantity</label>
+            <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
+              Quantity {baseValues && <span className="text-green-600 dark:text-green-400">⚡</span>}
+            </label>
             <input
               type="number"
               step="0.1"
               value={entry.quantity}
-              onChange={(e) => setEntry({ ...entry, quantity: e.target.value })}
+              onChange={(e) => handleQuantityChange(e.target.value)}
               className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
@@ -259,7 +341,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
             <input
               type="number"
               value={entry.calories}
-              onChange={(e) => setEntry({ ...entry, calories: e.target.value })}
+              onChange={(e) => handleManualNutritionEdit('calories', e.target.value)}
               className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
@@ -270,7 +352,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
               type="number"
               step="0.1"
               value={entry.protein}
-              onChange={(e) => setEntry({ ...entry, protein: e.target.value })}
+              onChange={(e) => handleManualNutritionEdit('protein', e.target.value)}
               className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
@@ -281,7 +363,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
               type="number"
               step="0.1"
               value={entry.carbs}
-              onChange={(e) => setEntry({ ...entry, carbs: e.target.value })}
+              onChange={(e) => handleManualNutritionEdit('carbs', e.target.value)}
               className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
@@ -292,7 +374,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
               type="number"
               step="0.1"
               value={entry.fat}
-              onChange={(e) => setEntry({ ...entry, fat: e.target.value })}
+              onChange={(e) => handleManualNutritionEdit('fat', e.target.value)}
               className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
               required
             />
@@ -319,7 +401,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
                 type="number"
                 step="0.1"
                 value={entry.cholesterol}
-                onChange={(e) => setEntry({ ...entry, cholesterol: e.target.value })}
+                onChange={(e) => handleManualNutritionEdit('cholesterol', e.target.value)}
                 className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder="Optional"
               />
@@ -332,7 +414,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
                 type="number"
                 step="0.1"
                 value={entry.sodium}
-                onChange={(e) => setEntry({ ...entry, sodium: e.target.value })}
+                onChange={(e) => handleManualNutritionEdit('sodium', e.target.value)}
                 className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder="Optional"
               />
@@ -345,7 +427,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
                 type="number"
                 step="0.1"
                 value={entry.sugar}
-                onChange={(e) => setEntry({ ...entry, sugar: e.target.value })}
+                onChange={(e) => handleManualNutritionEdit('sugar', e.target.value)}
                 className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                 placeholder="Optional"
               />

@@ -10,9 +10,12 @@ import aiRouter from './routes/ai';
 dotenv.config();
 
 // Log environment info for debugging
+console.log('=== Starting Application ===');
 console.log('Environment:', process.env.NODE_ENV || 'development');
 console.log('PORT:', process.env.PORT || '3001');
 console.log('DATABASE_URL set:', !!process.env.DATABASE_URL);
+console.log('Node version:', process.version);
+console.log('Working directory:', process.cwd());
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
@@ -40,14 +43,19 @@ app.use(cors({
 
 app.use(express.json());
 
-// Root health check (for deployment)
+// Root health check (for deployment) - must be before other routes
 app.get('/', (req, res) => {
-  res.json({ status: 'ok', message: 'Nutrition Tracker API is running' });
+  res.json({ status: 'ok', message: 'Nutrition Tracker API is running', timestamp: new Date().toISOString() });
 });
 
 // Basic health check
 app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', message: 'Nutrition Tracker API is running' });
+  res.json({ status: 'ok', message: 'Nutrition Tracker API is running', timestamp: new Date().toISOString() });
+});
+
+// Railway health check endpoint (some platforms use this)
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok', message: 'Nutrition Tracker API is running', timestamp: new Date().toISOString() });
 });
 
 // Routes
@@ -82,14 +90,25 @@ app.use((req: express.Request, res: express.Response) => {
 });
 
 // Start server
+console.log('Attempting to start server on port', PORT);
 const server = app.listen(PORT, '0.0.0.0', () => {
+  console.log('=== Server Started Successfully ===');
   console.log(`✓ Server running on port ${PORT}`);
-  console.log(`✓ Health check available at http://0.0.0.0:${PORT}/api/health`);
-  console.log(`✓ Root endpoint available at http://0.0.0.0:${PORT}/`);
+  console.log(`✓ Listening on 0.0.0.0:${PORT}`);
+  console.log(`✓ Health check: http://0.0.0.0:${PORT}/api/health`);
+  console.log(`✓ Root endpoint: http://0.0.0.0:${PORT}/`);
+  console.log('=== Ready to accept requests ===');
+  
+  // Test that the server is actually listening
+  const address = server.address();
+  if (address) {
+    console.log('Server address:', address);
+  }
 }).on('error', (err: NodeJS.ErrnoException) => {
   console.error('✗ Failed to start server:', err);
   console.error('Error code:', err.code);
   console.error('Error message:', err.message);
+  console.error('Stack:', err.stack);
   process.exit(1);
 });
 

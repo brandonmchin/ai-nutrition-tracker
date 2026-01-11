@@ -108,6 +108,9 @@ app.use((req: express.Request, res: express.Response) => {
   res.status(404).json({ error: 'Route not found' });
 });
 
+// Keep process alive interval (will be set after server starts)
+let keepAliveInterval: NodeJS.Timeout | null = null;
+
 // Start server
 console.log('Attempting to start server on port', PORT);
 const server = app.listen(PORT, '0.0.0.0', () => {
@@ -116,33 +119,35 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`✓ Listening on 0.0.0.0:${PORT}`);
   console.log(`✓ Health check: http://0.0.0.0:${PORT}/api/health`);
   console.log(`✓ Root endpoint: http://0.0.0.0:${PORT}/`);
-  console.log('=== Ready to accept requests ===');
   
   // Test that the server is actually listening
   const address = server.address();
   if (address) {
-    console.log('Server address:', address);
+    console.log('Server address:', JSON.stringify(address));
   }
   
+  // Verify server is actually accepting connections
+  console.log('Testing server is ready...');
+  const http = require('http');
+  const testReq = http.get(`http://localhost:${PORT}/`, (res: any) => {
+    console.log(`✓ Internal health check passed: ${res.statusCode}`);
+    res.on('data', () => {});
+    res.on('end', () => {
+      console.log('=== Ready to accept requests ===');
+    });
+  });
+  testReq.on('error', (err: any) => {
+    console.error('✗ Internal health check failed:', err.message);
+  });
+  testReq.setTimeout(2000, () => {
+    console.error('✗ Internal health check timed out');
+    testReq.destroy();
+  });
+  
   // Keep process alive and log periodically to show it's running
-  const keepAliveInterval = setInterval(() => {
+  keepAliveInterval = setInterval(() => {
     console.log(`[${new Date().toISOString()}] Server is running and listening on port ${PORT}`);
   }, 30000); // Every 30 seconds
-  
-  // Clear interval on shutdown
-  process.on('SIGTERM', () => {
-    clearInterval(keepAliveInterval);
-  });
-  
-  process.on('SIGINT', () => {
-    clearInterval(keepAliveInterval);
-  });
-  
-  // Test that we can actually handle a request
-  setTimeout(() => {
-    console.log('Server has been running for 5 seconds, testing internal health check...');
-    // This just confirms the server is still running
-  }, 5000);
 }).on('error', (err: NodeJS.ErrnoException) => {
   console.error('✗ Failed to start server:', err);
   console.error('Error code:', err.code);
@@ -153,17 +158,33 @@ const server = app.listen(PORT, '0.0.0.0', () => {
 
 // Graceful shutdown
 process.on('SIGTERM', () => {
-  console.log('SIGTERM received, shutting down gracefully...');
+  console.log('=== SIGTERM received, shutting down gracefully ===');
+  if (keepAliveInterval) {
+    clearInterval(keepAliveInterval);
+  }
   server.close(() => {
-    console.log('Server closed');
+    console.log('Server closed gracefully');
     process.exit(0);
   });
+  // Force exit after 10 seconds if server doesn't close
+  setTimeout(() => {
+    console.log('Forcing exit after timeout');
+    process.exit(0);
+  }, 10000);
 });
 
 process.on('SIGINT', () => {
-  console.log('SIGINT received, shutting down gracefully...');
+  console.log('=== SIGINT received, shutting down gracefully ===');
+  if (keepAliveInterval) {
+    clearInterval(keepAliveInterval);
+  }
   server.close(() => {
-    console.log('Server closed');
+    console.log('Server closed gracefully');
     process.exit(0);
   });
+  // Force exit after 10 seconds if server doesn't close
+  setTimeout(() => {
+    console.log('Forcing exit after timeout');
+    process.exit(0);
+  }, 10000);
 });

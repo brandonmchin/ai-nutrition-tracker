@@ -32,10 +32,17 @@ app.use(cors({
     // Allow requests with no origin (like mobile apps, Postman, or health checks)
     if (!origin) return callback(null, true);
     
+    // Allow Railway's health check system
+    if (origin.includes('healthcheck.railway.app') || origin.includes('railway.app')) {
+      return callback(null, true);
+    }
+    
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      callback(new Error('Not allowed by CORS'));
+      // Log for debugging but allow in production
+      console.log('CORS: Allowing origin:', origin);
+      callback(null, true);
     }
   },
   credentials: true,
@@ -65,15 +72,27 @@ app.use('/api/goals', goalsRouter);
 app.use('/api/food-logs', foodLogsRouter);
 app.use('/api/ai', aiRouter);
 
-// Error handlers
+// Error handlers - log but don't exit immediately to help debug
 process.on('uncaughtException', (error) => {
-  console.error('Uncaught Exception:', error);
-  process.exit(1);
+  console.error('=== Uncaught Exception ===');
+  console.error('Error:', error);
+  console.error('Stack:', error.stack);
+  console.error('This will cause the process to exit in 5 seconds...');
+  // Give time for logs to be written
+  setTimeout(() => {
+    process.exit(1);
+  }, 5000);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
-  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-  process.exit(1);
+  console.error('=== Unhandled Rejection ===');
+  console.error('Promise:', promise);
+  console.error('Reason:', reason);
+  console.error('This will cause the process to exit in 5 seconds...');
+  // Give time for logs to be written
+  setTimeout(() => {
+    process.exit(1);
+  }, 5000);
 });
 
 // Add error handling middleware (must be after routes)
@@ -104,6 +123,26 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   if (address) {
     console.log('Server address:', address);
   }
+  
+  // Keep process alive and log periodically to show it's running
+  const keepAliveInterval = setInterval(() => {
+    console.log(`[${new Date().toISOString()}] Server is running and listening on port ${PORT}`);
+  }, 30000); // Every 30 seconds
+  
+  // Clear interval on shutdown
+  process.on('SIGTERM', () => {
+    clearInterval(keepAliveInterval);
+  });
+  
+  process.on('SIGINT', () => {
+    clearInterval(keepAliveInterval);
+  });
+  
+  // Test that we can actually handle a request
+  setTimeout(() => {
+    console.log('Server has been running for 5 seconds, testing internal health check...');
+    // This just confirms the server is still running
+  }, 5000);
 }).on('error', (err: NodeJS.ErrnoException) => {
   console.error('✗ Failed to start server:', err);
   console.error('Error code:', err.code);

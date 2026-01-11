@@ -9,6 +9,11 @@ import aiRouter from './routes/ai';
 
 dotenv.config();
 
+// Log environment info for debugging
+console.log('Environment:', process.env.NODE_ENV || 'development');
+console.log('PORT:', process.env.PORT || '3001');
+console.log('DATABASE_URL set:', !!process.env.DATABASE_URL);
+
 const app = express();
 const PORT = parseInt(process.env.PORT || '3001', 10);
 
@@ -52,10 +57,27 @@ app.use('/api/goals', goalsRouter);
 app.use('/api/food-logs', foodLogsRouter);
 app.use('/api/ai', aiRouter);
 
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Health check available at http://0.0.0.0:${PORT}/api/health`);
-}).on('error', (err: NodeJS.ErrnoException) => {
-  console.error('Failed to start server:', err);
+// Error handlers
+process.on('uncaughtException', (error) => {
+  console.error('Uncaught Exception:', error);
   process.exit(1);
 });
+
+process.on('unhandledRejection', (reason, promise) => {
+  console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  process.exit(1);
+});
+
+// Start server
+try {
+  app.listen(PORT, '0.0.0.0', () => {
+    console.log(`✓ Server running on port ${PORT}`);
+    console.log(`✓ Health check available at http://0.0.0.0:${PORT}/api/health`);
+  }).on('error', (err: NodeJS.ErrnoException) => {
+    console.error('✗ Failed to start server:', err);
+    process.exit(1);
+  });
+} catch (error) {
+  console.error('✗ Error starting server:', error);
+  process.exit(1);
+}

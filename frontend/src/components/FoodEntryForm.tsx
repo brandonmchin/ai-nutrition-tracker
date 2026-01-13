@@ -7,6 +7,24 @@ interface FoodEntryFormProps {
   onEntryAdded: () => void;
 }
 
+interface SourceAnalysis {
+  item: string;
+  sources: {
+    url: string;
+    reason: string;
+    type: 'official' | 'database' | 'search' | 'estimate';
+  }[];
+  methodology: string;
+  nutrition: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  };
+  confidence: 'high' | 'medium' | 'low';
+  status: string;
+}
+
 const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdded }) => {
   const [entry, setEntry] = useState({
     foodName: '',
@@ -28,6 +46,8 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
   const [analyzing, setAnalyzing] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [confidence, setConfidence] = useState<string>('');
+  const [sourceAnalysis, setSourceAnalysis] = useState<SourceAnalysis[]>([]);
+  const [showSources, setShowSources] = useState(false);
 
   // Store base values from AI for scaling
   const [baseValues, setBaseValues] = useState<{
@@ -77,6 +97,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
     setAnalyzing(true);
     setSuggestions([]);
     setConfidence('');
+    setSourceAnalysis([]);
 
     try {
       // Get user's goals for context
@@ -119,6 +140,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
 
       setSuggestions(result.suggestions || []);
       setConfidence(result.confidence);
+      setSourceAnalysis(result.sourceAnalysis || []);
 
       // Show optional fields if any micros were detected
       if (result.cholesterol || result.sodium || result.sugar) {
@@ -173,6 +195,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
       setAiDescription('');
       setSuggestions([]);
       setConfidence('');
+      setSourceAnalysis([]);
       setBaseValues(null);
       setUseAI(false);
       onEntryAdded();
@@ -206,11 +229,12 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
             setUseAI(!useAI);
             setSuggestions([]);
             setConfidence('');
+            setSourceAnalysis([]);
             setBaseValues(null);
           }}
           className={`px-4 py-2 rounded transition-colors ${useAI
-              ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600'
-              : 'bg-purple-500 dark:bg-purple-600 text-white hover:bg-purple-600 dark:hover:bg-purple-700'
+            ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600'
+            : 'bg-purple-500 dark:bg-purple-600 text-white hover:bg-purple-600 dark:hover:bg-purple-700'
             }`}
         >
           {useAI ? '✏️ Switch to Manual' : '🤖 Use AI Assistant'}
@@ -241,8 +265,8 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
             <div className="mt-2 text-sm">
               <span className="text-gray-600 dark:text-gray-400">Confidence: </span>
               <span className={`font-semibold ${confidence === 'high' ? 'text-green-600 dark:text-green-400' :
-                  confidence === 'medium' ? 'text-yellow-600 dark:text-yellow-400' :
-                    'text-orange-600 dark:text-orange-400'
+                confidence === 'medium' ? 'text-yellow-600 dark:text-yellow-400' :
+                  'text-orange-600 dark:text-orange-400'
                 }`}>
                 {confidence.toUpperCase()}
               </span>
@@ -262,6 +286,114 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
                   <li key={index}>{suggestion}</li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {sourceAnalysis.length > 0 && (
+            <div className="mt-2">
+              <button
+                type="button"
+                onClick={() => setShowSources(true)}
+                className="text-xs text-blue-500 dark:text-blue-400 hover:underline flex items-center gap-1"
+              >
+                <span>ℹ️</span> View Analysis
+              </button>
+            </div>
+          )}
+
+          {showSources && (
+            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full shadow-xl max-h-[80vh] overflow-y-auto">
+                <h4 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">Nutrition Analysis Sources</h4>
+
+                <div className="space-y-6">
+                  {sourceAnalysis.map((analysis, index) => (
+                    <div key={index} className="border-b border-gray-200 dark:border-gray-700 last:border-0 pb-4 last:pb-0">
+                      <div className="flex justify-between items-start mb-2">
+                        <h5 className="font-semibold text-gray-900 dark:text-white">{analysis.item}</h5>
+                        <div className={`px-2 py-1 rounded text-xs font-medium ${analysis.confidence === 'high' ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300' :
+                          analysis.confidence === 'medium' ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-300' :
+                            'bg-orange-100 dark:bg-orange-900/30 text-orange-800 dark:text-orange-300'
+                          }`}>
+                          {analysis.status || analysis.confidence.toUpperCase()}
+                        </div>
+                      </div>
+
+                      {analysis.nutrition && (
+                        <div className="grid grid-cols-4 gap-2 mb-3 bg-gray-50 dark:bg-gray-900/50 p-2 rounded text-center">
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Cals</div>
+                            <div className="font-medium text-gray-900 dark:text-white">{analysis.nutrition.calories}</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Prot</div>
+                            <div className="font-medium text-gray-900 dark:text-white">{analysis.nutrition.protein}g</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Carbs</div>
+                            <div className="font-medium text-gray-900 dark:text-white">{analysis.nutrition.carbs}g</div>
+                          </div>
+                          <div>
+                            <div className="text-xs text-gray-500 dark:text-gray-400">Fat</div>
+                            <div className="font-medium text-gray-900 dark:text-white">{analysis.nutrition.fat}g</div>
+                          </div>
+                        </div>
+                      )}
+
+                      <div className="mb-2">
+                        <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">
+                          Methodology
+                        </p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300">
+                          {analysis.methodology}
+                        </p>
+                      </div>
+
+                      {analysis.sources.length > 0 && (
+                        <div>
+                          <p className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+                            Sources
+                          </p>
+                          <ul className="space-y-2">
+                            {analysis.sources.map((source, idx) => (
+                              <li key={idx} className="text-sm bg-gray-50 dark:bg-gray-900/30 p-2 rounded">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider ${source.type === 'official' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' :
+                                      source.type === 'database' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' :
+                                        'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                                    }`}>
+                                    {source.type}
+                                  </span>
+                                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                                    {source.reason}
+                                  </span>
+                                </div>
+                                <a
+                                  href={source.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-blue-600 dark:text-blue-400 hover:underline break-all block"
+                                >
+                                  {source.url}
+                                </a>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+
+                <div className="flex justify-end mt-6">
+                  <button
+                    onClick={() => setShowSources(false)}
+                    className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+              </div>
             </div>
           )}
         </div>

@@ -110,12 +110,12 @@ function App() {
     <div className="min-h-screen bg-gray-100 dark:bg-gray-900 transition-colors">
       <div className="max-w-6xl mx-auto p-4">
         <header className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-          <div className="flex justify-between items-start mb-4">
+          <div className="flex flex-col md:flex-row justify-between items-center md:items-start mb-4 gap-4 md:gap-0">
             <div>
-              <h1 className="text-3xl font-bold text-gray-800 dark:text-white">
+              <h1 className="text-3xl font-bold text-gray-800 dark:text-white text-center md:text-left">
                 Nutrition Tracker
               </h1>
-              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
+              <p className="text-sm text-gray-600 dark:text-gray-400 mt-1 text-center md:text-left">
                 Logged in as: {account.username}
               </p>
             </div>
@@ -137,15 +137,15 @@ function App() {
           </div>
           
           <div className="flex flex-wrap gap-4 items-center">
-            <div className="flex items-center gap-2">
-              <div>
+            <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
+              <div className="w-full sm:w-auto">
                 <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                   User
                 </label>
                 <select
                   value={selectedUserId}
                   onChange={(e) => setSelectedUserId(e.target.value)}
-                  className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                  className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white w-full sm:w-auto"
                   disabled={users.length === 0}
                 >
                   {users.length === 0 ? (
@@ -165,7 +165,7 @@ function App() {
                     const user = users.find(u => u.id === selectedUserId);
                     if (user) handleDeleteUser(user.id, user.name);
                   }}
-                  className="bg-red-500 dark:bg-red-600 text-white px-4 py-2 rounded hover:bg-red-600 dark:hover:bg-red-700 mt-6"
+                  className="bg-red-500 dark:bg-red-600 text-white px-4 py-2 rounded hover:bg-red-600 dark:hover:bg-red-700 mt-2 sm:mt-6 w-full sm:w-auto"
                   title="Delete user"
                 >
                   Delete User
@@ -174,14 +174,14 @@ function App() {
             </div>
             <button
               onClick={handleCreateUser}
-              className="bg-blue-500 dark:bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-600 dark:hover:bg-blue-700 mt-6 transition-colors"
+              className="bg-blue-500 dark:bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-600 dark:hover:bg-blue-700 mt-2 sm:mt-6 transition-colors w-full sm:w-auto"
             >
               New User
             </button>
             {selectedUserId && (
               <button
                 onClick={() => setShowGoals(!showGoals)}
-                className="bg-purple-500 dark:bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-600 dark:hover:bg-purple-700 mt-6 transition-colors"
+                className="bg-purple-500 dark:bg-purple-600 text-white px-4 py-2 rounded hover:bg-purple-600 dark:hover:bg-purple-700 mt-2 sm:mt-6 transition-colors w-full sm:w-auto"
               >
                 {showGoals ? 'Hide Goals' : 'Show Goals'}
               </button>
@@ -194,10 +194,10 @@ function App() {
         {selectedUserId && (
           <>
             <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
                 <button
                   onClick={() => changeDate(-1)}
-                  className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-full sm:w-auto"
                 >
                   ← Previous Day
                 </button>
@@ -214,7 +214,7 @@ function App() {
                 </div>
                 <button
                   onClick={() => changeDate(1)}
-                  className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                  className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-full sm:w-auto"
                 >
                   Next Day →
                 </button>

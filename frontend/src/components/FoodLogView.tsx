@@ -45,10 +45,10 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
 
   const calculateTotals = () => {
     if (!foodLog?.entries) {
-      return { 
-        calories: 0, 
-        protein: 0, 
-        carbs: 0, 
+      return {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
         fat: 0,
         cholesterol: 0,
         sodium: 0,
@@ -65,10 +65,10 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
         sodium: acc.sodium + (entry.sodium || 0),
         sugar: acc.sugar + (entry.sugar || 0),
       }),
-      { 
-        calories: 0, 
-        protein: 0, 
-        carbs: 0, 
+      {
+        calories: 0,
+        protein: 0,
+        carbs: 0,
         fat: 0,
         cholesterol: 0,
         sodium: 0,
@@ -85,14 +85,14 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
       <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Food Log for {date}</h3>
-      
+
       {/* Progress Summary */}
       {goals && (
         <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded">
           <h4 className="font-semibold mb-3 text-gray-800 dark:text-white">Daily Progress</h4>
-          
+
           {/* Main Macros */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
             <div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Calories</div>
               <div className="font-bold text-gray-900 dark:text-white">
@@ -137,7 +137,7 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
             <div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Cholesterol</div>
               <div className="font-bold text-gray-900 dark:text-white">
-                {goals?.cholesterolGoal 
+                {goals?.cholesterolGoal
                   ? `${totals.cholesterol.toFixed(1)}mg / ${goals.cholesterolGoal}mg`
                   : `${totals.cholesterol.toFixed(1)}mg`
                 }
@@ -151,7 +151,7 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
             <div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Sodium</div>
               <div className="font-bold text-gray-900 dark:text-white">
-                {goals?.sodiumGoal 
+                {goals?.sodiumGoal
                   ? `${totals.sodium.toFixed(1)}mg / ${goals.sodiumGoal}mg`
                   : `${totals.sodium.toFixed(1)}mg`
                 }
@@ -165,7 +165,7 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
             <div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Sugar</div>
               <div className="font-bold text-gray-900 dark:text-white">
-                {goals?.sugarGoal 
+                {goals?.sugarGoal
                   ? `${totals.sugar.toFixed(1)}g / ${goals.sugarGoal}g`
                   : `${totals.sugar.toFixed(1)}g`
                 }
@@ -214,7 +214,7 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
                       <span className="text-gray-600 dark:text-gray-400">F:</span> {entry.fat}g
                     </div>
                   </div>
-                  
+
                   {/* Show optional micros if present */}
                   {(entry.cholesterol || entry.sodium || entry.sugar) && (
                     <div className="mt-2 grid grid-cols-3 gap-2 text-sm border-t border-gray-200 dark:border-gray-700 pt-2">

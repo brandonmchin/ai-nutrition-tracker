@@ -28,7 +28,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
   const [analyzing, setAnalyzing] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [confidence, setConfidence] = useState<string>('');
-  
+
   // Store base values from AI for scaling
   const [baseValues, setBaseValues] = useState<{
     quantity: number;
@@ -56,13 +56,13 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
       protein: (baseValues.protein * scaleFactor).toFixed(1),
       carbs: (baseValues.carbs * scaleFactor).toFixed(1),
       fat: (baseValues.fat * scaleFactor).toFixed(1),
-      cholesterol: baseValues.cholesterol 
+      cholesterol: baseValues.cholesterol
         ? (baseValues.cholesterol * scaleFactor).toFixed(1)
         : '',
-      sodium: baseValues.sodium 
+      sodium: baseValues.sodium
         ? (baseValues.sodium * scaleFactor).toFixed(1)
         : '',
-      sugar: baseValues.sugar 
+      sugar: baseValues.sugar
         ? (baseValues.sugar * scaleFactor).toFixed(1)
         : '',
     }));
@@ -81,7 +81,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
     try {
       // Get user's goals for context
       const goals = await getGoals(userId);
-      
+
       if (!goals) {
         alert('Please set your nutrition goals first');
         return;
@@ -155,7 +155,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
       if (entry.sugar) entryData.sugar = parseFloat(entry.sugar);
 
       await addFoodEntry(userId, entryData);
-      
+
       // Reset form
       setEntry({
         foodName: '',
@@ -198,7 +198,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
 
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-      <div className="flex justify-between items-center mb-4">
+      <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4 sm:gap-0">
         <h3 className="text-xl font-bold text-gray-800 dark:text-white">Add Food Entry</h3>
         <button
           type="button"
@@ -208,11 +208,10 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
             setConfidence('');
             setBaseValues(null);
           }}
-          className={`px-4 py-2 rounded transition-colors ${
-            useAI
+          className={`px-4 py-2 rounded transition-colors ${useAI
               ? 'bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white hover:bg-gray-300 dark:hover:bg-gray-600'
               : 'bg-purple-500 dark:bg-purple-600 text-white hover:bg-purple-600 dark:hover:bg-purple-700'
-          }`}
+            }`}
         >
           {useAI ? '✏️ Switch to Manual' : '🤖 Use AI Assistant'}
         </button>
@@ -241,11 +240,10 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
           {confidence && (
             <div className="mt-2 text-sm">
               <span className="text-gray-600 dark:text-gray-400">Confidence: </span>
-              <span className={`font-semibold ${
-                confidence === 'high' ? 'text-green-600 dark:text-green-400' :
-                confidence === 'medium' ? 'text-yellow-600 dark:text-yellow-400' :
-                'text-orange-600 dark:text-orange-400'
-              }`}>
+              <span className={`font-semibold ${confidence === 'high' ? 'text-green-600 dark:text-green-400' :
+                  confidence === 'medium' ? 'text-yellow-600 dark:text-yellow-400' :
+                    'text-orange-600 dark:text-orange-400'
+                }`}>
                 {confidence.toUpperCase()}
               </span>
               {confidence !== 'high' && (
@@ -273,7 +271,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
         <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
           <p className="text-sm text-green-800 dark:text-green-300">
             ✨ <strong>Auto-scaling enabled:</strong> Adjust the quantity and all nutrition values will update automatically.
-            {' '}<button 
+            {' '}<button
               type="button"
               onClick={() => setBaseValues(null)}
               className="text-green-600 dark:text-green-400 underline hover:no-underline"

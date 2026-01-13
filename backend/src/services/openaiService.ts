@@ -49,9 +49,9 @@ ${goals.sugarGoal ? `- Sugar: ${goals.sugarGoal}g/day` : ''}
 
 Return this exact JSON structure with estimated nutrition values:
 {
-  "foodName": "brief, clear description of the food",
-  "quantity": estimated_quantity_as_number,
-  "unit": "g" or "oz" or "cup" or "serving" etc,
+  "foodName": "brief, clear description of the food. If multiple items, combine them.",
+  "quantity": estimated_quantity_as_number (if multiple items, use 1),
+  "unit": "g" or "oz" or "cup" or "serving" etc (if multiple items, use 'serving'),
   "calories": estimated_calories_as_number,
   "protein": estimated_protein_in_grams,
   "carbs": estimated_carbs_in_grams,
@@ -61,8 +61,15 @@ Return this exact JSON structure with estimated nutrition values:
   "sugar": estimated_sugar_in_grams_or_null,
   "mealType": "breakfast" or "lunch" or "dinner" or "snack",
   "suggestions": ["2-3 personalized suggestions based on user's goals for improving this meal"],
-  "confidence": "high" or "medium" or "low" (based on how specific the description was)
+  "confidence": "high" or "medium" or "low" (based on accuracy of nutrition facts for the given description)
 }
+
+Guidelines for handling food descriptions:
+- Multiple Items: If the user lists multiple items (e.g., "8oz beef and 300g potatoes"), combine them into a single entry with quantity 1 and unit 'serving'. Sum up the nutrition values for all items.
+- Confidence Score:
+  - "high": Standard foods with well-known nutrition data (e.g. "apple", "grilled chicken breast").
+  - "medium": Foods with variable ingredients or preparation methods (e.g. "lasagna", "pizza").
+  - "low": Obscure dishes or vague descriptions (e.g. "mom's special stew").
 
 Guidelines for suggestions:
 - If the meal is already well-aligned with goals, provide positive reinforcement

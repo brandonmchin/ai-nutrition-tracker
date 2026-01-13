@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { getUsersByAccount, createUser, deleteUser } from './services/api';
 import { Account, User } from './types';
 import GoalsForm from './components/GoalsForm';
@@ -6,6 +6,7 @@ import FoodEntryForm from './components/FoodEntryForm';
 import FoodLogView from './components/FoodLogView';
 import Login from './components/Login';
 import { useTheme } from './context/ThemeContext';
+import { useOnClickOutside } from './hooks/useOnClickOutside';
 
 function App() {
   const { isDark, toggleTheme } = useTheme();
@@ -17,6 +18,10 @@ function App() {
   );
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showGoals, setShowGoals] = useState(false);
+  const [showUserMenu, setShowUserMenu] = useState(false);
+
+  const userMenuRef = useRef<HTMLDivElement>(null);
+  useOnClickOutside(userMenuRef, () => setShowUserMenu(false));
 
   useEffect(() => {
     // Check if user is logged in (stored in localStorage)
@@ -75,15 +80,15 @@ function App() {
     if (!window.confirm(`Are you sure you want to delete user "${userName}"? This will delete all their data including goals and food logs.`)) {
       return;
     }
-    
+
     try {
       await deleteUser(userId);
-      
+
       // If we deleted the selected user, clear the selection
       if (selectedUserId === userId) {
         setSelectedUserId('');
       }
-      
+
       loadUsers();
     } catch (error) {
       console.error('Failed to delete user:', error);
@@ -135,49 +140,69 @@ function App() {
               </button>
             </div>
           </div>
-          
+
           <div className="flex flex-wrap gap-4 items-center">
             <div className="flex flex-col sm:flex-row items-center gap-2 w-full sm:w-auto">
-              <div className="w-full sm:w-auto">
+              <div className="w-full sm:w-auto relative">
                 <label className="block text-sm font-medium mb-1 text-gray-700 dark:text-gray-300">
                   User
                 </label>
-                <select
-                  value={selectedUserId}
-                  onChange={(e) => setSelectedUserId(e.target.value)}
-                  className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white w-full sm:w-auto"
-                  disabled={users.length === 0}
-                >
-                  {users.length === 0 ? (
-                    <option value="">No users - create one below</option>
-                  ) : (
-                    users.map((user) => (
-                      <option key={user.id} value={user.id}>
-                        {user.name}
-                      </option>
-                    ))
-                  )}
-                </select>
+                <div className="flex gap-2">
+                  <select
+                    value={selectedUserId}
+                    onChange={(e) => setSelectedUserId(e.target.value)}
+                    className="border border-gray-300 dark:border-gray-600 rounded-l px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white w-full sm:w-auto flex-grow"
+                    disabled={users.length === 0}
+                  >
+                    {users.length === 0 ? (
+                      <option value="">No users</option>
+                    ) : (
+                      users.map((user) => (
+                        <option key={user.id} value={user.id}>
+                          {user.name}
+                        </option>
+                      ))
+                    )}
+                  </select>
+
+                  <div className="relative" ref={userMenuRef}>
+                    <button
+                      onClick={() => setShowUserMenu(!showUserMenu)}
+                      className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-3 py-2 rounded-r hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors border border-l-0 border-gray-300 dark:border-gray-600"
+                      title="Manage Users"
+                    >
+                      ⚙️
+                    </button>
+
+                    {showUserMenu && (
+                      <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg z-50 border border-gray-200 dark:border-gray-700 py-1">
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            handleCreateUser();
+                          }}
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700"
+                        >
+                          ➕ New User
+                        </button>
+                        <button
+                          onClick={() => {
+                            setShowUserMenu(false);
+                            const user = users.find(u => u.id === selectedUserId);
+                            if (user) handleDeleteUser(user.id, user.name);
+                          }}
+                          disabled={!selectedUserId}
+                          className="block w-full text-left px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          🗑️ Delete User
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
               </div>
-              {selectedUserId && users.find(u => u.id === selectedUserId) && (
-                <button
-                  onClick={() => {
-                    const user = users.find(u => u.id === selectedUserId);
-                    if (user) handleDeleteUser(user.id, user.name);
-                  }}
-                  className="bg-red-500 dark:bg-red-600 text-white px-4 py-2 rounded hover:bg-red-600 dark:hover:bg-red-700 mt-2 sm:mt-6 w-full sm:w-auto"
-                  title="Delete user"
-                >
-                  Delete User
-                </button>
-              )}
             </div>
-            <button
-              onClick={handleCreateUser}
-              className="bg-blue-500 dark:bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-600 dark:hover:bg-blue-700 mt-2 sm:mt-6 transition-colors w-full sm:w-auto"
-            >
-              New User
-            </button>
+
             {selectedUserId && (
               <button
                 onClick={() => setShowGoals(!showGoals)}
@@ -191,68 +216,72 @@ function App() {
 
         {selectedUserId && showGoals && <GoalsForm userId={selectedUserId} />}
 
-        {selectedUserId && (
-          <>
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-              <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
-                <button
-                  onClick={() => changeDate(-1)}
-                  className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-full sm:w-auto"
-                >
-                  ← Previous Day
-                </button>
-                <div>
-                  <label className="block text-sm font-medium mb-1 text-center text-gray-700 dark:text-gray-300">
-                    Date
-                  </label>
-                  <input
-                    type="date"
-                    value={selectedDate}
-                    onChange={(e) => setSelectedDate(e.target.value)}
-                    className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                  />
+        {
+          selectedUserId && (
+            <>
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
+                  <button
+                    onClick={() => changeDate(-1)}
+                    className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-full sm:w-auto"
+                  >
+                    ← Previous Day
+                  </button>
+                  <div>
+                    <label className="block text-sm font-medium mb-1 text-center text-gray-700 dark:text-gray-300">
+                      Date
+                    </label>
+                    <input
+                      type="date"
+                      value={selectedDate}
+                      onChange={(e) => setSelectedDate(e.target.value)}
+                      className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+                    />
+                  </div>
+                  <button
+                    onClick={() => changeDate(1)}
+                    className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-full sm:w-auto"
+                  >
+                    Next Day →
+                  </button>
                 </div>
-                <button
-                  onClick={() => changeDate(1)}
-                  className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-full sm:w-auto"
-                >
-                  Next Day →
-                </button>
               </div>
+
+              <FoodEntryForm
+                userId={selectedUserId}
+                date={selectedDate}
+                onEntryAdded={handleEntryAdded}
+              />
+
+              <FoodLogView
+                userId={selectedUserId}
+                date={selectedDate}
+                refresh={refreshTrigger}
+              />
+            </>
+          )
+        }
+
+        {
+          !selectedUserId && users.length === 0 && (
+            <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
+              <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4">
+                Welcome to Nutrition Tracker!
+              </h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-4">
+                Get started by creating your first user profile.
+              </p>
+              <button
+                onClick={handleCreateUser}
+                className="bg-blue-500 dark:bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
+              >
+                Create Your First User
+              </button>
             </div>
-
-            <FoodEntryForm
-              userId={selectedUserId}
-              date={selectedDate}
-              onEntryAdded={handleEntryAdded}
-            />
-
-            <FoodLogView
-              userId={selectedUserId}
-              date={selectedDate}
-              refresh={refreshTrigger}
-            />
-          </>
-        )}
-
-        {!selectedUserId && users.length === 0 && (
-          <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-8 text-center">
-            <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300 mb-4">
-              Welcome to Nutrition Tracker!
-            </h2>
-            <p className="text-gray-600 dark:text-gray-400 mb-4">
-              Get started by creating your first user profile.
-            </p>
-            <button
-              onClick={handleCreateUser}
-              className="bg-blue-500 dark:bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors"
-            >
-              Create Your First User
-            </button>
-          </div>
-        )}
-      </div>
-    </div>
+          )
+        }
+      </div >
+    </div >
   );
 }
 

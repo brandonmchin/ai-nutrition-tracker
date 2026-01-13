@@ -225,6 +225,13 @@ CRITICAL: Return ONLY the JSON object.`;
         }
       })) : [];
 
+      // ALWAYS append a general Google Search query as the last option
+      sources.push({
+        url: `https://www.google.com/search?q=${encodeURIComponent(item.item + ' nutrition')}`,
+        reason: 'General Web Search',
+        type: 'search'
+      });
+
       // Ensure the item structure is correct
       return {
         item: item.item || 'Unknown Item',

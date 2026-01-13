@@ -302,8 +302,14 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
           )}
 
           {showSources && (
-            <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-              <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full shadow-xl max-h-[80vh] overflow-y-auto">
+            <div
+              className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4"
+              onClick={() => setShowSources(false)}
+            >
+              <div
+                className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-lg w-full shadow-xl max-h-[80vh] overflow-y-auto"
+                onClick={(e) => e.stopPropagation()}
+              >
                 <h4 className="text-lg font-bold mb-4 text-gray-800 dark:text-white">Nutrition Analysis Sources</h4>
 
                 <div className="space-y-6">
@@ -359,8 +365,8 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
                               <li key={idx} className="text-sm bg-gray-50 dark:bg-gray-900/30 p-2 rounded">
                                 <div className="flex items-center gap-2 mb-1">
                                   <span className={`text-[10px] px-1.5 py-0.5 rounded uppercase font-bold tracking-wider ${source.type === 'official' ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/40 dark:text-blue-300' :
-                                      source.type === 'database' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' :
-                                        'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
+                                    source.type === 'database' ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/40 dark:text-purple-300' :
+                                      'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400'
                                     }`}>
                                     {source.type}
                                   </span>

@@ -8,14 +8,20 @@ import Login from './components/Login';
 import { useTheme } from './context/ThemeContext';
 import { useOnClickOutside } from './hooks/useOnClickOutside';
 
+const getTodayString = () => {
+  const d = new Date();
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
+};
+
 function App() {
   const { isDark, toggleTheme } = useTheme();
   const [account, setAccount] = useState<Account | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
-  const [selectedDate, setSelectedDate] = useState<string>(
-    new Date().toISOString().split('T')[0]
-  );
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showGoals, setShowGoals] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -102,8 +108,17 @@ function App() {
 
   const changeDate = (days: number) => {
     const newDate = new Date(selectedDate);
-    newDate.setDate(newDate.getDate() + days);
-    setSelectedDate(newDate.toISOString().split('T')[0]);
+    // Adjust for timezone when creating date object from string "YYYY-MM-DD" which defaults to UTC
+    const dateParts = selectedDate.split('-').map(Number);
+    // Create date using local time constructor (year, monthIndex, day)
+    // Note: month is 0-indexed
+    const d = new Date(dateParts[0], dateParts[1] - 1, dateParts[2]);
+    d.setDate(d.getDate() + days);
+
+    const year = d.getFullYear();
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    setSelectedDate(`${year}-${month}-${day}`);
   };
 
   // Show login if not authenticated
@@ -219,28 +234,57 @@ function App() {
         {
           selectedUserId && (
             <>
-              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
-                <div className="flex flex-col sm:flex-row items-center justify-between gap-4 sm:gap-0">
+              <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6 mb-6">
+                <div className="flex items-center justify-between sm:justify-between gap-2 sm:gap-6">
+                  {/* Mobile Button: Square Arrow */}
                   <button
                     onClick={() => changeDate(-1)}
-                    className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-full sm:w-auto"
+                    className="sm:hidden bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white p-3 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex-shrink-0"
+                    aria-label="Previous Day"
+                  >
+                    <span className="text-xl font-bold">←</span>
+                  </button>
+                  {/* Desktop Button: Text */}
+                  <button
+                    onClick={() => changeDate(-1)}
+                    className="hidden sm:block bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                   >
                     ← Previous Day
                   </button>
-                  <div>
-                    <label className="block text-sm font-medium mb-1 text-center text-gray-700 dark:text-gray-300">
-                      Date
-                    </label>
-                    <input
-                      type="date"
-                      value={selectedDate}
-                      onChange={(e) => setSelectedDate(e.target.value)}
-                      className="border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                    />
+
+                  <div className="flex items-end gap-2">
+                    <div>
+                      <label className="block text-xs sm:text-sm font-medium mb-1 text-center text-gray-700 dark:text-gray-300">
+                        Date
+                      </label>
+                      <input
+                        type="date"
+                        value={selectedDate}
+                        onChange={(e) => setSelectedDate(e.target.value)}
+                        className="border border-gray-300 dark:border-gray-600 rounded px-2 sm:px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-sm sm:text-base w-[130px] sm:w-auto"
+                      />
+                    </div>
+                    <button
+                      onClick={() => setSelectedDate(getTodayString())}
+                      className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-3 py-2 rounded hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors text-sm font-medium h-[38px] sm:h-[42px]"
+                      title="Jump to Today"
+                    >
+                      Today
+                    </button>
                   </div>
+
+                  {/* Mobile Button: Square Arrow */}
                   <button
                     onClick={() => changeDate(1)}
-                    className="bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors w-full sm:w-auto"
+                    className="sm:hidden bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white p-3 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex-shrink-0"
+                    aria-label="Next Day"
+                  >
+                    <span className="text-xl font-bold">→</span>
+                  </button>
+                  {/* Desktop Button: Text */}
+                  <button
+                    onClick={() => changeDate(1)}
+                    className="hidden sm:block bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-white px-4 py-2 rounded hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
                   >
                     Next Day →
                   </button>

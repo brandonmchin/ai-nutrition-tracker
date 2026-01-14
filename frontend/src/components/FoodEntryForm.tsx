@@ -219,6 +219,30 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
     setBaseValues(null); // Disable auto-scaling when user manually edits
   };
 
+  const toggleAutoScaling = () => {
+    if (baseValues) {
+      setBaseValues(null);
+    } else {
+      // Enable based on current values
+      const currentQty = parseFloat(entry.quantity);
+      if (isNaN(currentQty) || currentQty <= 0) {
+        alert('Please enter a valid quantity to enable auto-scaling.');
+        return;
+      }
+
+      setBaseValues({
+        quantity: currentQty,
+        calories: parseFloat(entry.calories) || 0,
+        protein: parseFloat(entry.protein) || 0,
+        carbs: parseFloat(entry.carbs) || 0,
+        fat: parseFloat(entry.fat) || 0,
+        cholesterol: parseFloat(entry.cholesterol) || undefined,
+        sodium: parseFloat(entry.sodium) || undefined,
+        sugar: parseFloat(entry.sugar) || undefined,
+      });
+    }
+  };
+
   return (
     <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4 sm:gap-0">
@@ -509,20 +533,28 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
         </div>
       )}
 
-      {baseValues && (
-        <div className="mb-4 p-3 bg-green-50 dark:bg-green-900/20 rounded border border-green-200 dark:border-green-800">
-          <p className="text-sm text-green-800 dark:text-green-300">
-            ✨ <strong>Auto-scaling enabled:</strong> Adjust the quantity and all nutrition values will update automatically.
-            {' '}<button
-              type="button"
-              onClick={() => setBaseValues(null)}
-              className="text-green-600 dark:text-green-400 underline hover:no-underline"
-            >
-              Disable
-            </button>
-          </p>
-        </div>
-      )}
+      {/* Auto-scaling Control */}
+      <div className={`mb-4 p-3 rounded border flex justify-between items-center ${baseValues
+        ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+        : 'bg-gray-50 dark:bg-gray-700/30 border-gray-200 dark:border-gray-600'
+        }`}>
+        <p className="text-sm text-gray-700 dark:text-gray-300">
+          {baseValues
+            ? <span>✨ <strong>Auto-scaling is enabled:</strong> Nutrition values will update automatically as you change quantity.</span>
+            : <span>⚡ <strong>Auto-scaling is disabled:</strong> Toggle to automatically scale nutrition values with quantity.</span>
+          }
+        </p>
+        <button
+          type="button"
+          onClick={toggleAutoScaling}
+          className={`px-3 py-1 rounded text-xs font-medium transition-colors ${baseValues
+            ? 'bg-red-100 text-red-700 hover:bg-red-200 dark:bg-red-900/30 dark:text-red-300 dark:hover:bg-red-900/50'
+            : 'bg-green-100 text-green-700 hover:bg-green-200 dark:bg-green-900/30 dark:text-green-300 dark:hover:bg-green-900/50'
+            }`}
+        >
+          {baseValues ? 'Disable' : 'Enable'}
+        </button>
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

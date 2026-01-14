@@ -8,13 +8,13 @@ interface GoalsFormProps {
 
 const GoalsForm: React.FC<GoalsFormProps> = ({ userId }) => {
   const [goals, setGoalsState] = useState({
-    calorieGoal: 2000,
-    proteinGoal: 150,
-    carbsGoal: 200,
-    fatGoal: 65,
-    cholesterolGoal: undefined as number | undefined,
-    sodiumGoal: undefined as number | undefined,
-    sugarGoal: undefined as number | undefined,
+    calorieGoal: '2000',
+    proteinGoal: '150',
+    carbsGoal: '200',
+    fatGoal: '65',
+    cholesterolGoal: '' as string | undefined,
+    sodiumGoal: '' as string | undefined,
+    sugarGoal: '' as string | undefined,
   });
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -28,13 +28,13 @@ const GoalsForm: React.FC<GoalsFormProps> = ({ userId }) => {
       const data = await getGoals(userId);
       if (data) {
         setGoalsState({
-          calorieGoal: data.calorieGoal,
-          proteinGoal: data.proteinGoal,
-          carbsGoal: data.carbsGoal,
-          fatGoal: data.fatGoal,
-          cholesterolGoal: data.cholesterolGoal || undefined,
-          sodiumGoal: data.sodiumGoal || undefined,
-          sugarGoal: data.sugarGoal || undefined,
+          calorieGoal: data.calorieGoal.toString(),
+          proteinGoal: data.proteinGoal.toString(),
+          carbsGoal: data.carbsGoal.toString(),
+          fatGoal: data.fatGoal.toString(),
+          cholesterolGoal: data.cholesterolGoal?.toString() || '',
+          sodiumGoal: data.sodiumGoal?.toString() || '',
+          sugarGoal: data.sugarGoal?.toString() || '',
         });
       }
     } catch (error) {
@@ -48,8 +48,29 @@ const GoalsForm: React.FC<GoalsFormProps> = ({ userId }) => {
     e.preventDefault();
     setSaving(true);
     try {
-      await setGoals(userId, goals);
+      const formattedGoals = {
+        calorieGoal: parseFloat(goals.calorieGoal) || 0,
+        proteinGoal: parseFloat(goals.proteinGoal) || 0,
+        carbsGoal: parseFloat(goals.carbsGoal) || 0,
+        fatGoal: parseFloat(goals.fatGoal) || 0,
+        cholesterolGoal: goals.cholesterolGoal ? parseFloat(goals.cholesterolGoal) : undefined,
+        sodiumGoal: goals.sodiumGoal ? parseFloat(goals.sodiumGoal) : undefined,
+        sugarGoal: goals.sugarGoal ? parseFloat(goals.sugarGoal) : undefined,
+      };
+
+      await setGoals(userId, formattedGoals);
       alert('Goals saved successfully!');
+
+      // Reload with formatted numbers
+      setGoalsState({
+        calorieGoal: formattedGoals.calorieGoal.toString(),
+        proteinGoal: formattedGoals.proteinGoal.toString(),
+        carbsGoal: formattedGoals.carbsGoal.toString(),
+        fatGoal: formattedGoals.fatGoal.toString(),
+        cholesterolGoal: formattedGoals.cholesterolGoal?.toString() || '',
+        sodiumGoal: formattedGoals.sodiumGoal?.toString() || '',
+        sugarGoal: formattedGoals.sugarGoal?.toString() || '',
+      });
     } catch (error) {
       console.error('Failed to save goals:', error);
       alert('Failed to save goals');
@@ -59,7 +80,8 @@ const GoalsForm: React.FC<GoalsFormProps> = ({ userId }) => {
   };
 
   const handleChange = (field: string, value: string) => {
-    setGoalsState({ ...goals, [field]: parseFloat(value) || 0 });
+    // Allow empty string or numbers
+    setGoalsState({ ...goals, [field]: value });
   };
 
   if (loading) return <div className="text-center py-4 text-gray-700 dark:text-gray-300">Loading goals...</div>;
@@ -142,10 +164,10 @@ const GoalsForm: React.FC<GoalsFormProps> = ({ userId }) => {
                   className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="Optional"
                 />
-                {goals.cholesterolGoal !== undefined && goals.cholesterolGoal !== null && (
+                {goals.cholesterolGoal !== '' && (
                   <button
                     type="button"
-                    onClick={() => setGoalsState({ ...goals, cholesterolGoal: undefined })}
+                    onClick={() => setGoalsState({ ...goals, cholesterolGoal: '' })}
                     className="px-3 py-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                     title="Clear"
                   >
@@ -167,10 +189,10 @@ const GoalsForm: React.FC<GoalsFormProps> = ({ userId }) => {
                   className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="Optional"
                 />
-                {goals.sodiumGoal !== undefined && goals.sodiumGoal !== null && (
+                {goals.sodiumGoal !== '' && (
                   <button
                     type="button"
-                    onClick={() => setGoalsState({ ...goals, sodiumGoal: undefined })}
+                    onClick={() => setGoalsState({ ...goals, sodiumGoal: '' })}
                     className="px-3 py-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                     title="Clear"
                   >
@@ -192,10 +214,10 @@ const GoalsForm: React.FC<GoalsFormProps> = ({ userId }) => {
                   className="w-full border border-gray-300 dark:border-gray-600 rounded px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
                   placeholder="Optional"
                 />
-                {goals.sugarGoal !== undefined && goals.sugarGoal !== null && (
+                {goals.sugarGoal !== '' && (
                   <button
                     type="button"
-                    onClick={() => setGoalsState({ ...goals, sugarGoal: undefined })}
+                    onClick={() => setGoalsState({ ...goals, sugarGoal: '' })}
                     className="px-3 py-2 text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300"
                     title="Clear"
                   >

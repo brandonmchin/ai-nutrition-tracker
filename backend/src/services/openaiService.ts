@@ -275,3 +275,117 @@ CRITICAL: Return ONLY the JSON object.`;
     throw new Error('Failed to analyze food with AI');
   }
 };
+
+export const analyzeImage = async (base64Image: string): Promise<NutritionData> => {
+  const prompt = `
+    Analyze this image of a nutrition facts label or food item.
+    Extract the following information per serving:
+    - Item Name (e.g. "Oats", "Apple", "Greek Yogurt")
+    - Calories
+    - Protein (g)
+    - Carbs (g)
+    - Fat (g)
+    - Cholesterol (mg)
+    - Sodium (mg)
+    - Sugar (g)
+    
+    Also provide a confidence assessment (high, medium, low) and status (Verified if label is clear, Estimate if not).
+    
+    Return ONLY a valid JSON object with the following structure:
+    {
+      "item": "string",
+      "sources": [
+        { "url": "string (optional)", "reason": "string (optional)", "type": "official" | "database" | "search" | "estimate" }
+      ],
+      "methodology": "string",
+      "nutrition": {
+        "calories": number,
+        "protein": number,
+        "carbs": number,
+        "fat": number,
+        "cholesterol": number,
+        "sodium": number,
+        "sugar": number
+      },
+      "confidence": "high" | "medium" | "low",
+      "status": "Verified" | "Estimate"
+    }
+
+    Notes:
+    - If the user provides a nutrition label, set "methodology" to "Extracted from Nutrition Facts Label" and "status" to "Verified".
+    - If it's a photo of food without a label, estimate the nutrition and set "status" to "Estimate".
+    - "item" should be concise.
+  `;
+
+  try {
+    const response = await openai.chat.completions.create({
+      model: "gpt-4o",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: prompt },
+            {
+              type: "image_url",
+              image_url: {
+                url: base64Image,
+              },
+            },
+          ],
+        },
+      ],
+      response_format: { type: "json_object" },
+    });
+
+    const content = response.choices[0].message.content;
+    if (!content) {
+      throw new Error("No content received from OpenAI");
+    }
+
+    const item = JSON.parse(content);
+
+    const sources = item.sources || [];
+    sources.push({
+      url: `https://www.google.com/search?q=${encodeURIComponent(item.item + ' nutrition')}`,
+      reason: 'General Web Search',
+      type: 'search'
+    });
+
+    // Wrap single item into NutritionData structure
+    return {
+      foodName: item.item || 'Scanned Item',
+      quantity: 1,
+      unit: 'serving',
+      calories: item.nutrition?.calories || 0,
+      protein: item.nutrition?.protein || 0,
+      carbs: item.nutrition?.carbs || 0,
+      fat: item.nutrition?.fat || 0,
+      cholesterol: item.nutrition?.cholesterol,
+      sodium: item.nutrition?.sodium,
+      sugar: item.nutrition?.sugar,
+      mealType: 'snack',
+      suggestions: ['Verified from scan'],
+      confidence: item.confidence || 'high',
+      sourceAnalysis: [{
+        item: item.item || 'Scanned Item',
+        sources: sources,
+        methodology: item.methodology || 'Extracted from image',
+        nutrition: {
+          calories: item.nutrition?.calories || 0,
+          protein: item.nutrition?.protein || 0,
+          carbs: item.nutrition?.carbs || 0,
+          fat: item.nutrition?.fat || 0,
+          cholesterol: item.nutrition?.cholesterol || 0,
+          sodium: item.nutrition?.sodium || 0,
+          sugar: item.nutrition?.sugar || 0
+        },
+        confidence: item.confidence || 'high',
+        status: item.status || 'Verified'
+      }]
+    };
+
+  } catch (error) {
+    console.error("OpenAI Image Analysis Error:", error);
+    throw new Error("Failed to analyze image");
+  }
+};

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { addFoodEntry, analyzeFoodWithAI, getGoals } from '../services/api';
+import { addFoodEntry, analyzeFoodWithAI, analyzeImageWithAI, getGoals } from '../services/api';
 
 interface FoodEntryFormProps {
   userId: string;
@@ -260,6 +260,110 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
           >
             {analyzing ? '🤔 Analyzing...' : '✨ Analyze with AI'}
           </button>
+
+          <div className="mt-4 border-t border-purple-200 dark:border-purple-800 pt-4">
+            <label className="block text-sm font-medium mb-2 text-gray-700 dark:text-gray-300">
+              Or scan a nutrition label / food item
+            </label>
+            <div className="flex gap-2">
+              <label className="cursor-pointer bg-blue-500 dark:bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors flex items-center gap-2">
+                <span>📷</span> Scan Label
+                <input
+                  type="file"
+                  accept="image/*"
+                  capture="environment"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+
+                    // Validate file type
+                    if (!file.type.startsWith('image/')) {
+                      alert('Please upload an image file');
+                      return;
+                    }
+
+                    // Validate file size (max 5MB to be safe for base64)
+                    if (file.size > 5 * 1024 * 1024) {
+                      alert('Image is too large. Please use an image under 5MB.');
+                      return;
+                    }
+
+                    setAnalyzing(true);
+                    setSuggestions([]);
+                    setConfidence('');
+                    setSourceAnalysis([]);
+
+                    try {
+                      // Convert to base64
+                      const reader = new FileReader();
+                      reader.readAsDataURL(file);
+                      reader.onload = async () => {
+                        const base64 = reader.result as string;
+                        try {
+                          const result = await analyzeImageWithAI(base64);
+
+                          // Store base values for scaling
+                          setBaseValues({
+                            quantity: result.quantity,
+                            calories: result.calories,
+                            protein: result.protein,
+                            carbs: result.carbs,
+                            fat: result.fat,
+                            cholesterol: result.cholesterol || undefined,
+                            sodium: result.sodium || undefined,
+                            sugar: result.sugar || undefined,
+                          });
+
+                          // Populate form
+                          setEntry({
+                            foodName: result.foodName,
+                            quantity: result.quantity.toString(),
+                            unit: result.unit,
+                            calories: result.calories.toString(),
+                            protein: result.protein.toString(),
+                            carbs: result.carbs.toString(),
+                            fat: result.fat.toString(),
+                            mealType: result.mealType,
+                            cholesterol: result.cholesterol?.toString() || '',
+                            sodium: result.sodium?.toString() || '',
+                            sugar: result.sugar?.toString() || '',
+                          });
+
+                          setSuggestions(result.suggestions || []);
+                          setConfidence(result.confidence);
+                          setSourceAnalysis(result.sourceAnalysis || []);
+
+                          // Show optional fields if parsed
+                          if (result.cholesterol || result.sodium || result.sugar) {
+                            setShowOptional(true);
+                          }
+
+                          // Set description to "Scanned Image" so user knows
+                          setAiDescription('Scanned Image');
+
+                        } catch (err: any) {
+                          console.error('Image analysis failed:', err);
+                          alert(err.response?.data?.message || 'Failed to analyze image.');
+                        } finally {
+                          setAnalyzing(false);
+                          // Clear input
+                          e.target.value = '';
+                        }
+                      };
+                      reader.onerror = () => {
+                        alert('Failed to read image file');
+                        setAnalyzing(false);
+                      };
+                    } catch (error) {
+                      console.error('Error handling file:', error);
+                      setAnalyzing(false);
+                    }
+                  }}
+                />
+              </label>
+            </div>
+          </div>
 
           {confidence && (
             <div className="mt-2 text-sm">

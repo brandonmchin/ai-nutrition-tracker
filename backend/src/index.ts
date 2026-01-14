@@ -31,12 +31,12 @@ app.use(cors({
   origin: function (origin, callback) {
     // Allow requests with no origin (like mobile apps, Postman, or health checks)
     if (!origin) return callback(null, true);
-    
+
     // Allow Railway's health check system
     if (origin.includes('healthcheck.railway.app') || origin.includes('railway.app')) {
       return callback(null, true);
     }
-    
+
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
@@ -48,7 +48,8 @@ app.use(cors({
   credentials: true,
 }));
 
-app.use(express.json());
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 // Root health check (for deployment) - must be before other routes
 app.get('/', (req, res) => {
@@ -98,8 +99,8 @@ process.on('unhandledRejection', (reason, promise) => {
 // Add error handling middleware (must be after routes)
 app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
   console.error('Error:', err);
-  res.status(err.status || 500).json({ 
-    error: err.message || 'Internal server error' 
+  res.status(err.status || 500).json({
+    error: err.message || 'Internal server error'
   });
 });
 
@@ -119,19 +120,19 @@ const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`✓ Listening on 0.0.0.0:${PORT}`);
   console.log(`✓ Health check: http://0.0.0.0:${PORT}/api/health`);
   console.log(`✓ Root endpoint: http://0.0.0.0:${PORT}/`);
-  
+
   // Test that the server is actually listening
   const address = server.address();
   if (address) {
     console.log('Server address:', JSON.stringify(address));
   }
-  
+
   // Verify server is actually accepting connections
   console.log('Testing server is ready...');
   const http = require('http');
   const testReq = http.get(`http://localhost:${PORT}/`, (res: any) => {
     console.log(`✓ Internal health check passed: ${res.statusCode}`);
-    res.on('data', () => {});
+    res.on('data', () => { });
     res.on('end', () => {
       console.log('=== Ready to accept requests ===');
     });
@@ -143,7 +144,7 @@ const server = app.listen(PORT, '0.0.0.0', () => {
     console.error('✗ Internal health check timed out');
     testReq.destroy();
   });
-  
+
   // Keep process alive and log periodically to show it's running
   keepAliveInterval = setInterval(() => {
     console.log(`[${new Date().toISOString()}] Server is running and listening on port ${PORT}`);

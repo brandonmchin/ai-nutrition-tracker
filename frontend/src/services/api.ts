@@ -66,4 +66,9 @@ export const analyzeFoodWithAI = async (foodDescription: string, goals: any) => 
   return response.data;
 };
 
+export const analyzeImageWithAI = async (imageBase64: string) => {
+  const response = await api.post('/ai/analyze-image', { image: imageBase64 });
+  return response.data;
+};
+
 export default api;

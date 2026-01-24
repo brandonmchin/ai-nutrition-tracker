@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { getFoodLogByDate, deleteFoodEntry, getGoals } from '../services/api';
+import { getFoodLogByDate, deleteFoodEntry, getGoals, addFoodEntry } from '../services/api';
+import DropdownMenu from './DropdownMenu';
 import { FoodLog, FoodEntry, NutritionGoal } from '../types';
 
 interface FoodLogViewProps {
@@ -40,6 +41,33 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
     } catch (error) {
       console.error('Failed to delete entry:', error);
       alert('Failed to delete entry');
+    }
+  };
+
+  const handleReLog = async (entry: FoodEntry) => {
+    try {
+      console.log('Entry re-logged for today');
+      console.log(entry);
+
+      const { id, foodLogId, createdAt, updatedAt, ...entryData } = entry;
+
+      const now = new Date();
+      const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
+      const todayStr = localDate.toISOString().split('T')[0];
+
+      await addFoodEntry(userId, {
+        ...entryData,
+        date: todayStr
+      });
+
+      if (date === todayStr) {
+        loadData();
+      }
+
+      alert('Entry re-logged for today');
+    } catch (error) {
+      console.error('Failed to re-log entry:', error);
+      alert('Failed to re-log entry');
     }
   };
 
@@ -236,18 +264,29 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={() => handleDelete(entry.id)}
-                  className="text-red-500 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300 ml-4"
-                >
-                  Delete
-                </button>
+
+                <div className="ml-4">
+                  <DropdownMenu
+                    options={[
+                      {
+                        label: 'Re-log',
+                        onClick: () => handleReLog(entry)
+                      },
+                      {
+                        label: 'Delete',
+                        onClick: () => handleDelete(entry.id),
+                        variant: 'danger'
+                      }
+                    ]}
+                  />
+                </div>
               </div>
             </div>
           ))}
         </div>
-      )}
-    </div>
+      )
+      }
+    </div >
   );
 };
 

@@ -80,7 +80,6 @@ const GoalsForm: React.FC<GoalsFormProps> = ({ userId }) => {
   };
 
   const handleChange = (field: string, value: string) => {
-    // Allow empty string or numbers
     setGoalsState({ ...goals, [field]: value });
   };
 

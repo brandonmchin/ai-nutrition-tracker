@@ -8,7 +8,6 @@ import FoodLogView from './components/FoodLogView';
 import FavoritesView from './components/FavoritesView';
 import Login from './components/Login';
 import Layout from './components/Layout';
-import { useTheme } from './context/ThemeContext';
 import { useOnClickOutside } from './hooks/useOnClickOutside';
 
 const getTodayString = () => {

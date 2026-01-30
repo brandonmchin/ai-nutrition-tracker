@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, useLocation, useNavigate } from 'react-router-dom';
 import { getUsersByAccount, createUser, deleteUser } from './services/api';
 import { Account, User } from './types';
 import GoalsForm from './components/GoalsForm';
@@ -21,6 +21,7 @@ const getTodayString = () => {
 // Main Content Component (must be inside Router)
 function AppContent() {
   const location = useLocation();
+  const navigate = useNavigate();
   const [account, setAccount] = useState<Account | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
@@ -28,6 +29,7 @@ function AppContent() {
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [showGoals, setShowGoals] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [entryToLog, setEntryToLog] = useState<any>(null);
 
   const userMenuRef = useRef<HTMLDivElement>(null);
   useOnClickOutside(userMenuRef, () => setShowUserMenu(false));
@@ -109,6 +111,12 @@ function AppContent() {
 
   const handleEntryAdded = () => {
     setRefreshTrigger(prev => prev + 1);
+    setEntryToLog(null); // Clear the prefilled data after adding
+  };
+
+  const handleSelectForLog = (entry: any) => {
+    setEntryToLog(entry);
+    navigate('/'); // Navigate to dashboard where the entry form is
   };
 
   const changeDate = (days: number) => {
@@ -245,7 +253,7 @@ function AppContent() {
         )}
 
         <Routes>
-          <Route path="/favorites" element={selectedUserId ? <FavoritesView userId={selectedUserId} /> : (
+          <Route path="/favorites" element={selectedUserId ? <FavoritesView userId={selectedUserId} onSelectForLog={handleSelectForLog} /> : (
             <div className="text-center py-20 bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
               <div className="text-4xl mb-4">👤</div>
               <h3 className="text-lg font-medium text-gray-900 dark:text-white">User Selection Required</h3>
@@ -256,8 +264,18 @@ function AppContent() {
 
         {location.pathname === '/' && selectedUserId && (
           <div className="space-y-6 animate-fade-in">
-            <FoodEntryForm userId={selectedUserId} date={selectedDate} onEntryAdded={handleEntryAdded} />
-            <FoodLogView userId={selectedUserId} date={selectedDate} refresh={refreshTrigger} />
+            <FoodEntryForm
+              userId={selectedUserId}
+              date={selectedDate}
+              onEntryAdded={handleEntryAdded}
+              initialValues={entryToLog}
+            />
+            <FoodLogView
+              userId={selectedUserId}
+              date={selectedDate}
+              refresh={refreshTrigger}
+              onSelectForLog={handleSelectForLog}
+            />
           </div>
         )}
 

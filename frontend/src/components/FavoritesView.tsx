@@ -3,9 +3,10 @@ import { getFavorites, deleteFavorite, addFoodEntry } from '../services/api';
 
 interface FavoritesViewProps {
     userId: string;
+    onSelectForLog: (entry: any) => void;
 }
 
-const FavoritesView: React.FC<FavoritesViewProps> = ({ userId }) => {
+const FavoritesView: React.FC<FavoritesViewProps> = ({ userId, onSelectForLog }) => {
     const [favorites, setFavorites] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -27,24 +28,8 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({ userId }) => {
 
 
     const handleLogToToday = async (favorite: any) => {
-        try {
-            const { id, userId: uid, createdAt, updatedAt, ...entryData } = favorite;
-
-            const now = new Date();
-            // Adjust timezone for local date string
-            const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
-            const todayStr = localDate.toISOString().split('T')[0];
-
-            await addFoodEntry(userId, {
-                ...entryData,
-                date: todayStr
-            });
-
-            alert('Logged to today!');
-        } catch (error) {
-            console.error('Failed to log favorite:', error);
-            alert('Failed to log favorite');
-        }
+        const { id, userId: uid, createdAt, updatedAt, ...entryData } = favorite;
+        onSelectForLog(entryData);  // Note: The parent component (App.tsx) handles navigation to the dashboard/form
     };
 
     const handleDelete = async (id: string) => {

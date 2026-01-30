@@ -7,9 +7,10 @@ interface FoodLogViewProps {
   userId: string;
   date: string;
   refresh: number;
+  onSelectForLog: (entry: any) => void;
 }
 
-const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
+const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh, onSelectForLog }) => {
   const [foodLog, setFoodLog] = useState<FoodLog | null>(null);
   const [goals, setGoals] = useState<NutritionGoal | null>(null);
   const [loading, setLoading] = useState(true);
@@ -47,31 +48,13 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
   };
 
   const handleReLog = async (entry: FoodEntry) => {
-    try {
-      console.log('Entry re-logged for today');
-      console.log(entry);
+    // Prep variables to pass to the form
+    const { id, foodLogId, createdAt, updatedAt, ...entryData } = entry;
 
-      const { id, foodLogId, createdAt, updatedAt, ...entryData } = entry;
+    // Note: The parent component (App.tsx) handles navigation to the dashboard/form
+    onSelectForLog(entryData);
 
-      const now = new Date();
-      // Adjust timezone for local date string
-      const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
-      const todayStr = localDate.toISOString().split('T')[0];
-
-      await addFoodEntry(userId, {
-        ...entryData,
-        date: todayStr
-      });
-
-      if (date === todayStr) {
-        loadData();
-      }
-
-      alert('Entry re-logged for today');
-    } catch (error) {
-      console.error('Failed to re-log entry:', error);
-      alert('Failed to re-log entry');
-    }
+    // Scroll to top happens in the form component via the passed data change
   };
 
   const handleAddToFavorites = async (entry: FoodEntry) => {

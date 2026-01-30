@@ -1,10 +1,23 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { addFoodEntry, analyzeFoodWithAI, analyzeImageWithAI, getGoals } from '../services/api';
 
 interface FoodEntryFormProps {
   userId: string;
   date: string;
   onEntryAdded: () => void;
+  initialValues?: {
+    foodName: string;
+    quantity: number;
+    unit: string;
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+    cholesterol?: number;
+    sodium?: number;
+    sugar?: number;
+    mealType?: string;
+  } | null;
 }
 
 interface SourceAnalysis {
@@ -25,7 +38,7 @@ interface SourceAnalysis {
   status: string;
 }
 
-const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdded }) => {
+const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdded, initialValues }) => {
   const [entry, setEntry] = useState({
     foodName: '',
     quantity: '',
@@ -48,6 +61,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
   const [confidence, setConfidence] = useState<string>('');
   const [sourceAnalysis, setSourceAnalysis] = useState<SourceAnalysis[]>([]);
   const [showSources, setShowSources] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
 
   // Store base values from AI for scaling
   const [baseValues, setBaseValues] = useState<{
@@ -60,6 +74,45 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
     sodium?: number;
     sugar?: number;
   } | null>(null);
+
+  // Populate form with initialValues when provided
+  useEffect(() => {
+    if (initialValues) {
+      setEntry({
+        foodName: initialValues.foodName,
+        quantity: initialValues.quantity.toString(),
+        unit: initialValues.unit,
+        calories: initialValues.calories.toString(),
+        protein: initialValues.protein.toString(),
+        carbs: initialValues.carbs.toString(),
+        fat: initialValues.fat.toString(),
+        mealType: initialValues.mealType || 'breakfast',
+        cholesterol: initialValues.cholesterol?.toString() || '',
+        sodium: initialValues.sodium?.toString() || '',
+        sugar: initialValues.sugar?.toString() || '',
+      });
+
+      // Show optional fields if present
+      if (initialValues.cholesterol || initialValues.sodium || initialValues.sugar) {
+        setShowOptional(true);
+      }
+
+      // Set base values for scaling if needed (optional implementation choice)
+      setBaseValues({
+        quantity: initialValues.quantity,
+        calories: initialValues.calories,
+        protein: initialValues.protein,
+        carbs: initialValues.carbs,
+        fat: initialValues.fat,
+        cholesterol: initialValues.cholesterol,
+        sodium: initialValues.sodium,
+        sugar: initialValues.sugar,
+      });
+
+      // Switch to manual mode if AI was open
+      setUseAI(false);
+    }
+  }, [initialValues]);
 
   // Auto-scale nutrition values when quantity changes
   useEffect(() => {
@@ -243,8 +296,17 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
     }
   };
 
+  useEffect(() => {
+    if (initialValues) {
+      // Scroll to form
+      setTimeout(() => {
+        formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
+    }
+  }, [initialValues]);
+
   return (
-    <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
+    <div ref={formRef} className="bg-white dark:bg-gray-800 rounded-lg shadow p-6 mb-6">
       <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-4 sm:gap-0">
         <h3 className="text-xl font-bold text-gray-800 dark:text-white">Add Food Entry</h3>
         <button

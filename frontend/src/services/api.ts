@@ -60,6 +60,22 @@ export const deleteFoodEntry = async (entryId: string) => {
   return response.data;
 };
 
+// Favorites API
+export const addFavorite = async (userId: string, entry: any) => {
+  const response = await api.post(`/favorites/${userId}`, entry);
+  return response.data;
+};
+
+export const getFavorites = async (userId: string) => {
+  const response = await api.get(`/favorites/${userId}`);
+  return response.data;
+};
+
+export const deleteFavorite = async (id: string) => {
+  const response = await api.delete(`/favorites/${id}`);
+  return response.data;
+};
+
 // AI API
 export const analyzeFoodWithAI = async (foodDescription: string, goals: any) => {
   const response = await api.post('/ai/analyze-food', { foodDescription, goals });

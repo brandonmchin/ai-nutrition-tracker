@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { getFoodLogByDate, deleteFoodEntry, getGoals, addFoodEntry } from '../services/api';
+import { getFoodLogByDate, deleteFoodEntry, getGoals, addFoodEntry, addFavorite } from '../services/api';
 import DropdownMenu from './DropdownMenu';
 import { FoodLog, FoodEntry, NutritionGoal } from '../types';
 
@@ -52,6 +52,7 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
       const { id, foodLogId, createdAt, updatedAt, ...entryData } = entry;
 
       const now = new Date();
+      // Adjust timezone for local date string
       const localDate = new Date(now.getTime() - (now.getTimezoneOffset() * 60000));
       const todayStr = localDate.toISOString().split('T')[0];
 
@@ -68,6 +69,17 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
     } catch (error) {
       console.error('Failed to re-log entry:', error);
       alert('Failed to re-log entry');
+    }
+  };
+
+  const handleAddToFavorites = async (entry: FoodEntry) => {
+    try {
+      const { id, foodLogId, createdAt, updatedAt, ...entryData } = entry;
+      await addFavorite(userId, entryData);
+      alert('Added to favorites!');
+    } catch (error) {
+      console.error('Failed to add to favorites:', error);
+      alert('Failed to add to favorites');
     }
   };
 
@@ -271,6 +283,10 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
                       {
                         label: 'Re-log',
                         onClick: () => handleReLog(entry)
+                      },
+                      {
+                        label: 'Add to Favorites',
+                        onClick: () => handleAddToFavorites(entry)
                       },
                       {
                         label: 'Delete',

@@ -6,6 +6,7 @@ import goalsRouter from './routes/goals';
 import foodLogsRouter from './routes/foodLogs';
 import usersRouter from './routes/users';
 import aiRouter from './routes/ai';
+import favoritesRouter from './routes/favorites';
 
 dotenv.config();
 
@@ -72,6 +73,7 @@ app.use('/api/users', usersRouter);
 app.use('/api/goals', goalsRouter);
 app.use('/api/food-logs', foodLogsRouter);
 app.use('/api/ai', aiRouter);
+app.use('/api/favorites', favoritesRouter);
 
 // Error handlers - log but don't exit immediately to help debug
 process.on('uncaughtException', (error) => {

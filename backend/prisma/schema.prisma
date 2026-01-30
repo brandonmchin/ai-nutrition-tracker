@@ -27,8 +27,43 @@ model User {
   
   goals     NutritionGoal?
   foodLogs  FoodLog[]
+  favorites FavoriteFood[]
 
   @@index([accountId])
+}
+
+model FavoriteFood {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  foodName  String
+  quantity  Float
+  unit      String   // e.g., "grams", "oz", "cup"
+  
+  // Nutritional info
+  calories  Int
+  protein   Float
+  carbs     Float
+  fat       Float
+  
+  // Optional micros
+  cholesterol   Float?
+  sodium        Float?
+  sugar         Float?
+  vitaminA      Float?
+  vitaminC      Float?
+  vitaminD      Float?
+  calcium       Float?
+  iron          Float?
+  
+  mealType  String?
+  notes     String?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  @@index([userId])
 }
 
 model NutritionGoal {

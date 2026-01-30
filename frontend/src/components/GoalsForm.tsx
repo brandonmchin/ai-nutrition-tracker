@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getGoals, setGoals } from '../services/api';
-import { NutritionGoal } from '../types';
 
 interface GoalsFormProps {
   userId: string;
@@ -19,11 +18,7 @@ const GoalsForm: React.FC<GoalsFormProps> = ({ userId }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
-    loadGoals();
-  }, [userId]);
-
-  const loadGoals = async () => {
+  const loadGoals = useCallback(async () => {
     try {
       const data = await getGoals(userId);
       if (data) {
@@ -42,7 +37,13 @@ const GoalsForm: React.FC<GoalsFormProps> = ({ userId }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId]);
+
+  useEffect(() => {
+    loadGoals();
+  }, [loadGoals]);
+
+
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

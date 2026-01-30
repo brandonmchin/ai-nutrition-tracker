@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, useLocation } from 'react-router-dom';
 import { getUsersByAccount, createUser, deleteUser } from './services/api';
 import { Account, User } from './types';
@@ -21,8 +21,7 @@ const getTodayString = () => {
 
 // Main Content Component (must be inside Router)
 function AppContent() {
-  const { isDark, toggleTheme } = useTheme();
-  const location = useLocation(); // Now safely inside Router
+  const location = useLocation();
   const [account, setAccount] = useState<Account | null>(null);
   const [users, setUsers] = useState<User[]>([]);
   const [selectedUserId, setSelectedUserId] = useState<string>('');
@@ -43,11 +42,24 @@ function AppContent() {
     }
   }, []);
 
+  const loadUsers = useCallback(async () => {
+    if (!account) return;
+    try {
+      const data = await getUsersByAccount(account.id);
+      setUsers(data);
+      if (data.length > 0 && !selectedUserId) {
+        setSelectedUserId(data[0].id);
+      }
+    } catch (error) {
+      console.error('Failed to load users:', error);
+    }
+  }, [account, selectedUserId]);
+
   useEffect(() => {
     if (account) {
       loadUsers();
     }
-  }, [account]);
+  }, [account, loadUsers]);
 
   const handleLogin = (loggedInAccount: Account) => {
     setAccount(loggedInAccount);
@@ -61,18 +73,7 @@ function AppContent() {
     localStorage.removeItem('account');
   };
 
-  const loadUsers = async () => {
-    if (!account) return;
-    try {
-      const data = await getUsersByAccount(account.id);
-      setUsers(data);
-      if (data.length > 0 && !selectedUserId) {
-        setSelectedUserId(data[0].id);
-      }
-    } catch (error) {
-      console.error('Failed to load users:', error);
-    }
-  };
+
 
   const handleCreateUser = async () => {
     if (!account) return;
@@ -112,7 +113,6 @@ function AppContent() {
   };
 
   const changeDate = (days: number) => {
-    const newDate = new Date(selectedDate);
     // Adjust for timezone when creating date object from string "YYYY-MM-DD" which defaults to UTC
     const dateParts = selectedDate.split('-').map(Number);
     // Create date using local time constructor (year, monthIndex, day)

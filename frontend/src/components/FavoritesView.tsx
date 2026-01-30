@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getFavorites, deleteFavorite, addFoodEntry } from '../services/api';
 
 interface FavoritesViewProps {
@@ -9,11 +9,7 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({ userId }) => {
     const [favorites, setFavorites] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
 
-    useEffect(() => {
-        loadFavorites();
-    }, [userId]);
-
-    const loadFavorites = async () => {
+    const loadFavorites = useCallback(async () => {
         try {
             const data = await getFavorites(userId);
             setFavorites(data);
@@ -22,7 +18,13 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({ userId }) => {
         } finally {
             setLoading(false);
         }
-    };
+    }, [userId]);
+
+    useEffect(() => {
+        loadFavorites();
+    }, [loadFavorites]);
+
+
 
     const handleLogToToday = async (favorite: any) => {
         try {

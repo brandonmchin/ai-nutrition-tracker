@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { getFoodLogByDate, deleteFoodEntry, getGoals, addFoodEntry, addFavorite } from '../services/api';
 import DropdownMenu from './DropdownMenu';
 import { FoodLog, FoodEntry, NutritionGoal } from '../types';
@@ -14,11 +14,7 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
   const [goals, setGoals] = useState<NutritionGoal | null>(null);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    loadData();
-  }, [userId, date, refresh]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       const [logData, goalsData] = await Promise.all([
         getFoodLogByDate(userId, date),
@@ -31,7 +27,13 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [userId, date]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData, refresh]);
+
+
 
   const handleDelete = async (entryId: string) => {
     if (!window.confirm('Delete this entry?')) return;
@@ -118,7 +120,6 @@ const FoodLogView: React.FC<FoodLogViewProps> = ({ userId, date, refresh }) => {
   };
 
   const totals = calculateTotals();
-  const hasOptionalMicros = goals && (goals.cholesterolGoal || goals.sodiumGoal || goals.sugarGoal);
 
   if (loading) return <div className="text-center py-4 text-gray-700 dark:text-gray-300">Loading...</div>;
 

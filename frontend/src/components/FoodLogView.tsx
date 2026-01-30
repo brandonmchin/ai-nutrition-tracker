@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getFoodLogByDate, deleteFoodEntry, getGoals, addFoodEntry, addFavorite } from '../services/api';
+import { getFoodLogByDate, deleteFoodEntry, getGoals, addFavorite } from '../services/api';
 import DropdownMenu from './DropdownMenu';
 import { FoodLog, FoodEntry, NutritionGoal } from '../types';
 

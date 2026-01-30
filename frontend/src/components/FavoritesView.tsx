@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { getFavorites, deleteFavorite, addFoodEntry } from '../services/api';
+import { getFavorites, deleteFavorite } from '../services/api';
 
 interface FavoritesViewProps {
     userId: string;

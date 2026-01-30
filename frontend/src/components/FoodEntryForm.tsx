@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { addFoodEntry, analyzeFoodWithAI, analyzeImageWithAI, getGoals } from '../services/api';
+import { addFoodEntry, analyzeFoodWithAI, analyzeImageWithAI, getGoals, addFavorite } from '../services/api';
 
 interface FoodEntryFormProps {
   userId: string;
@@ -257,6 +257,36 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
       alert('Failed to add food entry');
     } finally {
       setAdding(false);
+    }
+  };
+
+  const handleAddToFavorites = async () => {
+    if (!entry.foodName || !entry.quantity || !entry.calories || !entry.protein || !entry.carbs || !entry.fat) {
+      alert('Please fill in all required fields before adding to favorites.');
+      return;
+    }
+
+    try {
+      const favoriteData: any = {
+        foodName: entry.foodName,
+        quantity: parseFloat(entry.quantity),
+        unit: entry.unit,
+        calories: parseInt(entry.calories),
+        protein: parseFloat(entry.protein),
+        carbs: parseFloat(entry.carbs),
+        fat: parseFloat(entry.fat),
+      };
+
+      // Add optional fields if they have values
+      if (entry.cholesterol) favoriteData.cholesterol = parseFloat(entry.cholesterol);
+      if (entry.sodium) favoriteData.sodium = parseFloat(entry.sodium);
+      if (entry.sugar) favoriteData.sugar = parseFloat(entry.sugar);
+
+      await addFavorite(userId, favoriteData);
+      alert('Added to favorites!');
+    } catch (error) {
+      console.error('Failed to add to favorites:', error);
+      alert('Failed to add to favorites. It might already exist.');
     }
   };
 
@@ -776,6 +806,13 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
             className="bg-green-500 dark:bg-green-600 text-white px-6 py-2 rounded hover:bg-green-600 dark:hover:bg-green-700 disabled:bg-gray-400 dark:disabled:bg-gray-600 transition-colors"
           >
             {adding ? 'Adding...' : 'Add Entry'}
+          </button>
+          <button
+            type="button"
+            onClick={handleAddToFavorites}
+            className="ml-3 border border-pink-500 text-pink-500 dark:text-pink-400 dark:border-pink-400 px-6 py-2 rounded hover:bg-pink-50 dark:hover:bg-pink-900/20 transition-colors"
+          >
+            Add to Favorites
           </button>
         </div>
       </form>

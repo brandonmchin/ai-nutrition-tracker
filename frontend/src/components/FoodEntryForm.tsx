@@ -383,7 +383,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ userId, date, onEntryAdde
             </label>
             <div className="flex gap-2">
               <label className="cursor-pointer bg-blue-500 dark:bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-600 dark:hover:bg-blue-700 transition-colors flex items-center gap-2">
-                <span>📷</span> Scan Label
+                <span>📷</span> Scan Item
                 <input
                   type="file"
                   accept="image/*"

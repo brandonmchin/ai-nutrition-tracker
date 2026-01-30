@@ -8,6 +8,9 @@ A full-stack nutrition tracking application with user authentication.
 - Set calorie and macro goals (protein, carbs, fat)
 - Track optional micronutrients (cholesterol, sodium, sugar)
 - Log food entries with detailed nutrition info
+- Save frequent meals to Favorites for quick logging
+- AI-powered food analysis from text descriptions
+- Scan food items and labels from images
 - View daily progress toward goals
 - Navigate between different days
 - Dark/light theme support

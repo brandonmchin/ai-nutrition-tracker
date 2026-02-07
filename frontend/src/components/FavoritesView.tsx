@@ -45,17 +45,17 @@ const FavoritesView: React.FC<FavoritesViewProps> = ({ userId, onSelectForLog })
     if (loading) return <div className="text-center py-4 text-gray-700 dark:text-gray-300">Loading favorites...</div>;
 
     return (
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow p-4 sm:p-6">
             <h3 className="text-xl font-bold mb-4 text-gray-800 dark:text-white">Your Favorites</h3>
 
             {favorites.length === 0 ? (
                 <p className="text-gray-500 dark:text-gray-400">No favorites added yet.</p>
             ) : (
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
                     {favorites.map((fav) => (
                         <div key={fav.id} className="border border-gray-200 dark:border-gray-700 rounded p-4 bg-gray-50 dark:bg-gray-900">
                             <div className="flex justify-between items-start mb-2">
-                                <h4 className="font-semibold text-gray-900 dark:text-white truncate" title={fav.foodName}>
+                                <h4 className="font-semibold text-gray-900 dark:text-white truncate flex-1 min-w-0 pr-2" title={fav.foodName}>
                                     {fav.foodName}
                                 </h4>
                                 <button
